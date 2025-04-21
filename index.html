@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Content Chatbot Demo</title>
+    <style>
+        :root {
+            --primary-color: #2563EB;
+            --hover-color: #1D4ED8;
+            --bg-color: #F3F4F6;
+            --text-color: #1F2937;
+            --user-bubble: #E3F2FD;
+            --bot-bubble: #F1F1F1;
+            --border-color: #E5E7EB;
+            --container-bg: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: #6B7280;
+            margin-bottom: 20px;
+        }
+        
+        .main-container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .left-panel {
+            flex: 1;
+        }
+        
+        .right-panel {
+            flex: 1;
+        }
+        
+        .panel {
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .website-form {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: var(--hover-color);
+        }
+        
+        .btn-secondary {
+            background-color: #6B7280;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4B5563;
+        }
+        
+        .website-info {
+            margin-bottom: 20px;
+        }
+        
+        .website-url {
+            padding: 10px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        
+        .status {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .status.success {
+            color: #10B981;
+        }
+        
+        .status.error {
+            color: #EF4444;
+        }
+        
+        .chat-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            background-color: #FAFAFA;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            position: relative;
+            line-height: 1.4;
+        }
+        
+        .user-message {
+            background-color: var(--user-bubble);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+            text-align: right;
+        }
+        
+        .bot-message {
+            background-color: var(--bot-bubble);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .chat-input {
+            display: flex;
+            margin-top: auto;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px 0 0 5px;
+            font-size: 16px;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-top: 5px;
+        }
+        
+        .demo-info {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #DBEAFE;
+            border-radius: 5px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-box {
+            flex: 1;
+            background-color: white;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6B7280;
+        }
+        
+        .loading-dots {
+            display: inline-block;
+        }
+        
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Website Content Chatbot</h1>
+        <div class="subtitle">An AI assistant that answers questions about any website</div>
+    </header>
+    
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="panel">
+                <h2>Configure Chatbot</h2>
+                <div class="website-form">
+                    <div class="form-group">
+                        <label for="website-url">Website URL</label>
+                        <input type="url" id="website-url" placeholder="https://example.com" value="https://example.com">
+                    </div>
+                    <button id="scrape-button" class="btn">Scrape Website Content</button>
+                    <div id="scrape-status" class="status"></div>
+                </div>
+                
+                <div class="website-info">
+                    <h3>Currently answering questions about:</h3>
+                    <div class="website-url" id="current-website">Not configured yet</div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <div class="stat-value" id="chunks-count">0</div>
+                        <div class="stat-label">Content Chunks</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="last-updated">-</div>
+                        <div class="stat-label">Last Updated</div>
+                    </div>
+                </div>
+                
+                <div class="demo-info">
+                    <strong>Demo Tips:</strong>
+                    <ul>
+                        <li>Enter a website URL and click "Scrape Website Content"</li>
+                        <li>Wait for content to be processed</li>
+                        <li>Ask questions about the website in the chat panel</li>
+                        <li>Try different websites to compare results</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel chat-container">
+                <h2>Chat with Website AI</h2>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message bot-message">
+                        Welcome! To get started, please configure a website on the left panel. Once the content is scraped, you can ask me any questions about it!
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="user-input" placeholder="Ask a question about the website..." disabled>
+                    <button id="send-button" class="btn" disabled>Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const websiteUrlInput = document.getElementById('website-url');
+        const scrapeButton = document.getElementById('scrape-button');
+        const scrapeStatus = document.getElementById('scrape-status');
+        const currentWebsite = document.getElementById('current-website');
+        const chunksCount = document.getElementById('chunks-count');
+        const lastUpdated = document.getElementById('last-updated');
+        
+        // N8N webhook URLs - replace with your actual endpoints
+        const scrapeWebhookUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/scrape';
+        const queryWebhookUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/query';
+        
+        // Session identifier
+        let sessionId = Math.random().toString(36).substring(2, 15);
+        let isProcessing = false;
+        
+        // Add a message to the chat
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            // Add message text
+            messageDiv.textContent = text;
+            
+            // Add timestamp
+            const timestamp = document.createElement('div');
+            timestamp.className = 'timestamp';
+            const now = new Date();
+            timestamp.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageDiv.appendChild(timestamp);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Format the date in a readable format
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Handle scraping the website
+        function scrapeWebsite() {
+            if (isProcessing) return;
+            
+            const websiteUrl = websiteUrlInput.value.trim();
+            if (!websiteUrl) {
+                scrapeStatus.textContent = 'Please enter a valid URL';
+                scrapeStatus.className = 'status error';
+                return;
+            }
+            
+            // Update status
+            isProcessing = true;
+            scrapeButton.disabled = true;
+            scrapeStatus.textContent = 'Scraping in progress...';
+            scrapeStatus.className = 'status';
+            
+            // Send request to N8N
+            fetch(scrapeWebhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    targetWebsite: websiteUrl
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update UI with results
+                currentWebsite.textContent = websiteUrl;
+                chunksCount.textContent = data.chunkCount || 0;
+                lastUpdated.textContent = formatDate(data.timestamp);
+                
+                // Update status
+                scrapeStatus.textContent = 'Website content successfully scraped!';
+                scrapeStatus.className = 'status success';
+                
+                // Enable chat interface
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                
+                // Add confirmation message to chat
+                addMessage(`I've analyzed the content from ${websiteUrl}. You can now ask me questions about this website!`, false);
+                
+                isProcessing = false;
+                scrapeButton.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                scrapeStatus.textContent = 'Error scraping website. Please try again.';
+                scrapeStatus.className = 'status error';
+                isProcessing = false;
+                scrapeButton.disabled = false;
+            });
+        }
+        
+        // Handle sending a chat message
+        function sendMessage() {
+            if (isProcessing) return;
+            
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, true);
+            userInput.value = '';
+            
+            // Show loading indicator
+            isProcessing = true;
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot-message';
+            loadingDiv.innerHTML = 'Thinking<span class="loading-dots"></span>';
+            chatMessages.appendChild(loadingDiv);
+            
+            // Send to N8N webhook
+            fetch(queryWebhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: message,
+                    userId: sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove loading indicator
+                chatMessages.removeChild(loadingDiv);
+                
+                // Add bot response
+                addMessage(data.response, false);
+                isProcessing = false;
+            })
+            .catch(error => {
+                // Remove loading indicator
+                chatMessages.removeChild(loadingDiv);
+                
+                // Add error message
+                addMessage('Sorry, there was an error processing your request. Please try again.', false);
+                console.error('Error:', error);
+                isProcessing = false;
+            });
+        }
+        
+        // Event listeners
+        scrapeButton.addEventListener('click', scrapeWebsite);
+        sendButton.addEventListener('click', sendMessage);
+        
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !isProcessing) {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
