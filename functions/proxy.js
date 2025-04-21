@@ -28,21 +28,33 @@ exports.handler = async function(event, context) {
       throw new Error('Unknown endpoint requested');
     }
     
+    // Extract data from the POST body
+    const postData = JSON.parse(event.body || '{}');
+    
+    // For scrape requests, add the target website as a query parameter
+    if (event.path.includes('scrape') && postData.targetWebsite) {
+      fullUrl += `?targetWebsite=${encodeURIComponent(postData.targetWebsite)}`;
+    }
+    
+    // For query requests, add the query as a query parameter
+    if (event.path.includes('query') && postData.query) {
+      fullUrl += `?query=${encodeURIComponent(postData.query)}&userId=${encodeURIComponent(postData.userId || 'anonymous')}`;
+    }
+    
     console.log('Request details:', {
       path: event.path,
-      method: event.httpMethod,
+      method: 'GET',  // Now using GET
       targetUrl: fullUrl,
-      body: event.body
+      originalBody: event.body
     });
     
-    // Forward the request to N8N
+    // Forward the request to N8N using GET instead of POST
     console.log('Attempting to fetch from N8N...');
     const response = await fetch(fullUrl, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      },
-      body: event.body
+        'Accept': 'application/json'
+      }
     });
     
     console.log('N8N response status:', response.status);
