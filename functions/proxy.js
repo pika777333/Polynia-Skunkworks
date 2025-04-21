@@ -30,7 +30,7 @@ exports.handler = async function(event, context) {
       }
     } else if (event.path.includes('query')) {
       // Build URL with query parameters for query
-      fullUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/query';
+      fullUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook/chatbot/query';
       if (postData.query) {
         fullUrl += `?query=${encodeURIComponent(postData.query)}`;
         if (postData.userId) {
