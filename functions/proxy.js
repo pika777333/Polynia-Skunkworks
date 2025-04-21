@@ -24,7 +24,7 @@ exports.handler = async function(event, context) {
     
     if (event.path.includes('scrape')) {
       // Build URL with query parameters for scrape
-      fullUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/scrape';
+      fullUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook/chatbot/scrape';
       if (postData.targetWebsite) {
         fullUrl += `?targetWebsite=${encodeURIComponent(postData.targetWebsite)}`;
       }
