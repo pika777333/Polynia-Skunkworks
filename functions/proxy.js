@@ -92,7 +92,8 @@ exports.handler = async function(event, context) {
           statusCode: 200,
           headers,
           body: JSON.stringify({
-            response: data.response || "I don't have enough information to answer that question."
+            // Check if N8N returns text property instead of response
+            response: data.text || data.response || "I don't have enough information to answer that question."
           })
         };
       }
