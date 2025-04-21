@@ -326,8 +326,8 @@
         const lastUpdated = document.getElementById('last-updated');
         
         // N8N webhook URLs - replace with your actual endpoints
-        const scrapeWebhookUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/scrape';
-        const queryWebhookUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/query';
+        const scrapeWebhookUrl = '/api/proxy/scrape';
+        const queryWebhookUrl = '/api/proxy/query';
         
         // Session identifier
         let sessionId = Math.random().toString(36).substring(2, 15);
