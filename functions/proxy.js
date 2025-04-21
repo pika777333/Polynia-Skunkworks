@@ -38,7 +38,7 @@ exports.handler = async function(event, context) {
     // Forward the request to N8N
     console.log('Attempting to fetch from N8N...');
     const response = await fetch(fullUrl, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json'
       },
