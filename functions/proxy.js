@@ -18,15 +18,21 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    // Extract endpoint (scrape or query)
-    const pathParts = event.path.split('/');
-    const endpoint = pathParts[pathParts.length - 1];
-    const fullUrl = `https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/${endpoint}`;
+    // Use fixed URLs instead of building them dynamically
+    let fullUrl;
+    if (event.path.includes('scrape')) {
+      fullUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/scrape';
+    } else if (event.path.includes('query')) {
+      fullUrl = 'https://lincolnpolynia.app.n8n.cloud/webhook-test/chatbot/query';
+    } else {
+      throw new Error('Unknown endpoint requested');
+    }
     
     console.log('Request details:', {
-      endpoint: endpoint,
+      path: event.path,
       method: event.httpMethod,
-      targetUrl: fullUrl
+      targetUrl: fullUrl,
+      body: event.body
     });
     
     // Forward the request to N8N
@@ -41,15 +47,20 @@ exports.handler = async function(event, context) {
     
     console.log('N8N response status:', response.status);
     
-    if (!response.ok) {
-      throw new Error(`N8N responded with status: ${response.status}`);
+    // For debugging, return whatever response we get, even if it's an error
+    const responseText = await response.text();
+    console.log('N8N response body:', responseText);
+    
+    // Try to parse as JSON if possible
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      data = { raw: responseText };
     }
     
-    const data = await response.json();
-    console.log('Successfully received JSON response from N8N');
-    
     return {
-      statusCode: 200,
+      statusCode: response.status,
       headers,
       body: JSON.stringify(data)
     };
