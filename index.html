@@ -155,13 +155,19 @@
             color: #856404;
             border-radius: 5px;
         }
-        .blink {
-            animation: blink-animation 1s steps(5, start) infinite;
+        .record-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 1.5s ease infinite;
         }
-        @keyframes blink-animation {
-            to {
-                visibility: hidden;
-            }
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.8; }
         }
     </style>
 </head>
@@ -212,11 +218,14 @@
             
             let recognition = null;
             let isRecording = false;
-            let restartTimeout = null;
-            let finalTranscript = '';
-            let interimSpan = null;
+            let shouldRestart = false;
+            let restartAttempts = 0;
+            let maxRestartAttempts = 3;
+            let lastRestartTime = 0;
+            let silenceTimeout = null;
+            let transcript = '';
             
-            // Debug info to help diagnose issues
+            // Debug info
             const isChrome = !!window.chrome;
             const isFirefox = typeof InstallTrigger !== 'undefined';
             const isEdge = navigator.userAgent.indexOf("Edg") != -1;
@@ -240,203 +249,230 @@
                 return;
             }
             
-            // Create a robust speech recognition setup
-            function setupSpeechRecognition() {
+            // Initialize recognition once at load time
+            function initRecognition() {
+                if (recognition) return; // Don't recreate if already exists
+                
                 try {
                     recognition = new SpeechRecognition();
                     
-                    // Configure recognition
-                    recognition.continuous = true;        // For continuous recording
-                    recognition.interimResults = true;    // Get interim results
-                    recognition.maxAlternatives = 1;      // Just get one alternative
-                    recognition.lang = 'en-US';           // Set language
+                    // Desktop browsers seem to work better with these settings
+                    if (!isMobile) {
+                        recognition.continuous = false;      // Less continuous for desktop
+                        recognition.interimResults = true;   // Get interim results
+                        recognition.maxAlternatives = 1;     // Just one alternative
+                    } else {
+                        recognition.continuous = true;       // Continuous for mobile
+                        recognition.interimResults = true;   // Get interim results
+                        recognition.maxAlternatives = 1;     // Just one alternative
+                    }
+                    
+                    recognition.lang = 'en-US';
                     
                     // Handle start event
                     recognition.onstart = function() {
                         console.log('Recognition started');
                         isRecording = true;
-                        status.textContent = 'Listening... Speak now';
-                        status.classList.add('recording');
-                        status.classList.add('blink');
-                        startButton.disabled = true;
-                        stopButton.disabled = false;
+                        shouldRestart = true;
+                        updateRecordingStatus(true);
                     };
                     
-                    // Handle end event - critical for desktop browsers
+                    // Handle end event
                     recognition.onend = function() {
-                        console.log('Recognition ended', isRecording);
+                        console.log('Recognition ended, should restart:', shouldRestart);
                         
-                        // Clear any pending restarts
-                        if (restartTimeout) {
-                            clearTimeout(restartTimeout);
-                            restartTimeout = null;
-                        }
-                        
-                        if (isRecording) {
-                            // If still recording, restart after a short delay
-                            status.textContent = 'Reconnecting...';
-                            
-                            restartTimeout = setTimeout(() => {
-                                try {
-                                    recognition.start();
-                                    console.log('Recognition restarted');
-                                } catch (e) {
-                                    console.error('Failed to restart recognition:', e);
+                        // Only attempt restart if we're supposed to still be recording
+                        if (shouldRestart) {
+                            // Prevent too many rapid restarts
+                            const now = Date.now();
+                            if (now - lastRestartTime < 1000) {
+                                restartAttempts++;
+                                console.log('Rapid restart detected, attempt:', restartAttempts);
+                                
+                                if (restartAttempts > maxRestartAttempts) {
+                                    console.log('Too many restart attempts, stopping');
+                                    shouldRestart = false;
                                     isRecording = false;
-                                    status.textContent = 'Recording failed: ' + e.message;
-                                    status.classList.remove('blink');
-                                    status.classList.add('error');
-                                    startButton.disabled = false;
-                                    stopButton.disabled = true;
+                                    updateRecordingStatus(false);
+                                    status.textContent = 'Recording stopped: too many reconnects';
+                                    return;
                                 }
-                            }, 300); // Short delay before restart
-                        } else {
-                            // If deliberately stopped
-                            status.textContent = 'Recording stopped';
-                            status.classList.remove('recording');
-                            status.classList.remove('blink');
-                            startButton.disabled = false;
-                            stopButton.disabled = true;
-                            
-                            // Remove any interim results
-                            if (interimSpan && interimSpan.parentNode) {
-                                interimSpan.parentNode.removeChild(interimSpan);
-                            }
-                        }
-                    };
-                    
-                    // Handle results
-                    recognition.onresult = function(event) {
-                        let interim = '';
-                        
-                        // Process all results
-                        for (let i = event.resultIndex; i < event.results.length; i++) {
-                            const transcript = event.results[i][0].transcript;
-                            
-                            if (event.results[i].isFinal) {
-                                finalTranscript += transcript + ' ';
-                                console.log('Final transcript:', transcript);
                             } else {
-                                interim += transcript;
-                            }
-                        }
-                        
-                        // Update the display with final transcript
-                        if (finalTranscript) {
-                            output.innerHTML = finalTranscript;
-                        }
-                        
-                        // Show interim results
-                        if (interim) {
-                            // Remove previous interim if exists
-                            if (interimSpan && interimSpan.parentNode) {
-                                interimSpan.parentNode.removeChild(interimSpan);
+                                restartAttempts = 0;
                             }
                             
-                            // Create new interim span
-                            interimSpan = document.createElement('span');
-                            interimSpan.classList.add('interim');
-                            interimSpan.style.color = '#999';
-                            interimSpan.textContent = ' ' + interim;
-                            output.appendChild(interimSpan);
+                            lastRestartTime = now;
+                            
+                            // Simple delay to prevent constant restarting
+                            setTimeout(() => {
+                                if (shouldRestart) {
+                                    try {
+                                        recognition.start();
+                                        console.log('Recognition restarted');
+                                    } catch (e) {
+                                        console.error('Failed to restart recognition:', e);
+                                        shouldRestart = false;
+                                        isRecording = false;
+                                        updateRecordingStatus(false);
+                                    }
+                                }
+                            }, 300);
+                        } else {
+                            isRecording = false;
+                            updateRecordingStatus(false);
                         }
                     };
                     
-                    // Handle errors
+                    // Handle results - the core of speech recognition
+                    recognition.onresult = function(event) {
+                        let finalText = '';
+                        let interimText = '';
+                        
+                        // Clear any existing silence timeout
+                        if (silenceTimeout) {
+                            clearTimeout(silenceTimeout);
+                            silenceTimeout = null;
+                        }
+                        
+                        // Get results
+                        for (let i = 0; i < event.results.length; i++) {
+                            const result = event.results[i];
+                            if (result.isFinal) {
+                                finalText += result[0].transcript + ' ';
+                            } else {
+                                interimText += result[0].transcript;
+                            }
+                        }
+                        
+                        // If we got final text, add it to our transcript
+                        if (finalText) {
+                            transcript += finalText;
+                            console.log('Added final text:', finalText);
+                        }
+                        
+                        // Update the display
+                        updateTranscriptDisplay(transcript, interimText);
+                    };
+                    
+                    // Handle errors - important for debugging and recovery
                     recognition.onerror = function(event) {
                         console.error('Recognition error:', event.error);
                         
-                        let errorMessage = 'Error: ';
-                        switch (event.error) {
+                        switch(event.error) {
                             case 'no-speech':
-                                errorMessage += 'No speech detected';
-                                // Don't stop on no-speech, this happens frequently
+                                // This is common and not a reason to stop
                                 break;
-                            case 'audio-capture':
-                                errorMessage += 'Microphone not detected';
-                                isRecording = false;
-                                break;
-                            case 'not-allowed':
-                                errorMessage += 'Microphone permission denied';
-                                isRecording = false;
-                                break;
+                                
                             case 'aborted':
-                                errorMessage += 'Recording aborted';
-                                // Don't stop on aborted
+                                // This can happen in normal operation
                                 break;
-                            case 'network':
-                                errorMessage += 'Network error';
-                                // May be temporary, try to continue
+                                
+                            case 'audio-capture':
+                                status.textContent = 'Error: Microphone not detected';
+                                shouldRestart = false;
                                 break;
+                                
+                            case 'not-allowed':
+                                status.textContent = 'Error: Microphone permission denied';
+                                shouldRestart = false;
+                                break;
+                                
+                            case 'service-not-allowed':
+                                status.textContent = 'Error: Speech service not allowed';
+                                shouldRestart = false;
+                                break;
+                                
                             default:
-                                errorMessage += event.error;
-                                isRecording = false;
+                                status.textContent = `Error: ${event.error}`;
+                                // For unknown errors, we'll try to restart a few times
+                                if (restartAttempts > maxRestartAttempts) {
+                                    shouldRestart = false;
+                                }
                         }
                         
-                        status.textContent = errorMessage;
-                        status.classList.add('error');
-                        
-                        if (!isRecording) {
-                            status.classList.remove('recording');
-                            status.classList.remove('blink');
-                            startButton.disabled = false;
-                            stopButton.disabled = true;
-                        } else {
-                            // For temporary errors, auto-clear the error message
-                            setTimeout(() => {
-                                status.classList.remove('error');
-                                status.textContent = 'Listening... Speak now';
-                            }, 3000);
+                        if (!shouldRestart) {
+                            isRecording = false;
+                            updateRecordingStatus(false);
                         }
                     };
                     
                 } catch (error) {
-                    console.error('Error setting up speech recognition:', error);
-                    status.textContent = 'Could not initialize speech recognition: ' + error.message;
+                    console.error('Error initializing speech recognition:', error);
+                    status.textContent = 'Could not initialize speech recognition';
                     status.classList.add('error');
-                    startButton.disabled = false;
                 }
             }
             
-            // Start recording with proper permission handling
+            // Update the transcript display
+            function updateTranscriptDisplay(finalText, interimText = '') {
+                // Prepare final text with proper spacing
+                let displayText = finalText;
+                
+                // Add interim text if available
+                if (interimText) {
+                    displayText += ' <span style="color: #999;">' + interimText + '</span>';
+                }
+                
+                // Update the output area
+                output.innerHTML = displayText;
+            }
+            
+            // Update recording status UI
+            function updateRecordingStatus(isActive) {
+                if (isActive) {
+                    status.innerHTML = '<span class="record-dot"></span> Listening...';
+                    status.classList.add('recording');
+                    startButton.disabled = true;
+                    stopButton.disabled = false;
+                } else {
+                    status.textContent = 'Ready to record';
+                    status.classList.remove('recording');
+                    startButton.disabled = false;
+                    stopButton.disabled = true;
+                }
+            }
+            
+            // Start recording
             startButton.addEventListener('click', function() {
-                // Request microphone permission first
+                // Request microphone permission
                 navigator.mediaDevices.getUserMedia({ audio: true })
                     .then(function(stream) {
-                        // Stop tracks as we only needed permission
+                        // Stop the stream as we just needed permission
                         stream.getTracks().forEach(track => track.stop());
                         
-                        // Clear existing transcript
-                        finalTranscript = '';
-                        output.innerHTML = '';
+                        // Reset variables
+                        transcript = '';
+                        restartAttempts = 0;
+                        shouldRestart = true;
                         
-                        // Set up and start recognition
-                        setupSpeechRecognition();
+                        // Initialize recognition if needed
+                        initRecognition();
                         
+                        // Start recognition
                         try {
                             recognition.start();
                             console.log('Started recognition');
                         } catch (error) {
-                            console.error("Failed to start recognition:", error);
+                            console.error('Failed to start recognition:', error);
                             status.textContent = 'Error starting recognition: ' + error.message;
                             status.classList.add('error');
                         }
                     })
                     .catch(function(err) {
                         console.error('Microphone permission denied:', err);
-                        status.textContent = 'Microphone access denied. Please check your browser settings.';
+                        status.textContent = 'Microphone access denied';
                         status.classList.add('error');
                     });
             });
             
-            // Stop recording with proper cleanup
+            // Stop recording
             stopButton.addEventListener('click', function() {
-                isRecording = false;
+                // Stop the recognition properly
+                shouldRestart = false;
                 
-                // Clear any pending restarts
-                if (restartTimeout) {
-                    clearTimeout(restartTimeout);
-                    restartTimeout = null;
+                if (silenceTimeout) {
+                    clearTimeout(silenceTimeout);
+                    silenceTimeout = null;
                 }
                 
                 if (recognition) {
@@ -445,20 +481,24 @@
                         console.log('Stopped recognition');
                     } catch (e) {
                         console.error('Error stopping recognition:', e);
+                        // Even if stop fails, update UI
+                        isRecording = false;
+                        updateRecordingStatus(false);
                     }
+                } else {
+                    isRecording = false;
+                    updateRecordingStatus(false);
                 }
-                
-                status.classList.remove('blink');
             });
             
-            // Clear all outputs
+            // Clear all text
             resetButton.addEventListener('click', function() {
+                transcript = '';
                 output.innerHTML = '';
                 aiOutput.innerHTML = '';
-                finalTranscript = '';
                 status.textContent = 'Text cleared';
                 setTimeout(() => {
-                    status.textContent = isRecording ? 'Listening... Speak now' : 'Ready to record';
+                    status.textContent = isRecording ? 'Listening...' : 'Ready to record';
                 }, 1500);
             });
             
@@ -470,18 +510,18 @@
                     status.textContent = 'Please record or type some text first';
                     status.classList.add('error');
                     setTimeout(() => {
-                        status.textContent = isRecording ? 'Listening... Speak now' : 'Ready to record';
+                        status.textContent = isRecording ? 'Listening...' : 'Ready to record';
                         status.classList.remove('error');
                     }, 2000);
                     return;
                 }
                 
-                // Show loading indicator
+                // Show loading
                 loadingContainer.style.display = 'block';
                 status.textContent = 'Sending to AI...';
                 
                 try {
-                    // Send text to make.com
+                    // Send to make.com
                     const response = await sendToMake(text);
                     
                     // Display AI response
@@ -493,19 +533,19 @@
                     status.classList.add('error');
                     aiOutput.innerHTML = 'An error occurred while processing your request. Please try again.';
                 } finally {
-                    // Hide loading indicator
+                    // Hide loading
                     loadingContainer.style.display = 'none';
                     setTimeout(() => {
-                        status.textContent = isRecording ? 'Listening... Speak now' : 'Ready to record';
+                        status.textContent = isRecording ? 'Listening...' : 'Ready to record';
                         status.classList.remove('error');
                     }, 2000);
                 }
             });
             
-            // Send to make.com with robust error handling
+            // Send to make.com
             async function sendToMake(text) {
-                // Replace this URL with your actual make.com webhook URL
-                const makeWebhookUrl = 'https://hook.us2.make.com/6idc80ec0mzgdbqszdk29y3oq94knvu9';
+                // Replace with your actual make.com webhook URL
+                const makeWebhookUrl = 'https://hook.eu1.make.com/YOUR_WEBHOOK_ID';
                 
                 try {
                     console.log('Sending to make.com:', text);
@@ -516,17 +556,17 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({ text }),
-                        // Add timeout to prevent hanging
-                        signal: AbortSignal.timeout(20000) // 20 second timeout
+                        // Add timeout for safety
+                        signal: AbortSignal.timeout(20000)
                     });
                     
                     console.log('Response status:', response.status);
                     
-                    // Try to get response as text first
+                    // Get raw response
                     const responseText = await response.text();
                     console.log('Raw response:', responseText);
                     
-                    // Then try to parse as JSON if possible
+                    // Try to parse JSON
                     let data;
                     try {
                         data = JSON.parse(responseText);
@@ -536,7 +576,7 @@
                         return responseText || "Received non-JSON response from service";
                     }
                     
-                    // Handle various response formats
+                    // Return appropriate field
                     if (data.aiResponse) {
                         return data.aiResponse;
                     } else if (data.response) {
@@ -552,7 +592,6 @@
                     } else if (typeof data === 'string') {
                         return data;
                     } else {
-                        // If no recognized field, stringify the whole response
                         console.warn('Unrecognized response format:', data);
                         return JSON.stringify(data);
                     }
