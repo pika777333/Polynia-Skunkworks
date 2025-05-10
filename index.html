@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio to Text with AI Response</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .status {
+            text-align: center;
+            font-weight: bold;
+            margin: 15px 0;
+            min-height: 24px;
+        }
+        .recording {
+            color: #e74c3c;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #startButton {
+            background-color: #2ecc71;
+        }
+        #startButton:hover {
+            background-color: #27ae60;
+        }
+        #stopButton {
+            background-color: #e74c3c;
+        }
+        #stopButton:hover {
+            background-color: #c0392b;
+        }
+        #resetButton {
+            background-color: #95a5a6;
+        }
+        #resetButton:hover {
+            background-color: #7f8c8d;
+        }
+        #processButton {
+            background-color: #9b59b6;
+        }
+        #processButton:hover {
+            background-color: #8e44ad;
+        }
+        .output-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .output-box {
+            width: 100%;
+            min-height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: white;
+        }
+        .column-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .info {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            margin: 10px 0;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Audio to Text with AI Response</h1>
+        <div class="status" id="status">Ready to record</div>
+        <div class="controls">
+            <button id="startButton">Start Recording</button>
+            <button id="stopButton" disabled>Stop Recording</button>
+            <button id="resetButton">Clear All</button>
+            <button id="processButton">Process with AI</button>
+        </div>
+        <div class="output-container">
+            <div>
+                <div class="column-header">Your Speech:</div>
+                <div class="output-box" id="output" contenteditable="true"></div>
+            </div>
+            <div>
+                <div class="column-header">AI Response:</div>
+                <div class="output-box" id="aiOutput"></div>
+                <div id="loadingContainer" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Processing with AI...</span>
+                </div>
+            </div>
+        </div>
+        <div class="info">
+            <p>Click "Start Recording" and speak into your microphone. Your speech will be converted to text in real-time.</p>
+            <p>Click "Process with AI" to send your text to the AI and get a response.</p>
+            <p>Note: This feature requires microphone access and works best in Chrome, Edge, or Safari.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('startButton');
+            const stopButton = document.getElementById('stopButton');
+            const resetButton = document.getElementById('resetButton');
+            const processButton = document.getElementById('processButton');
+            const status = document.getElementById('status');
+            const output = document.getElementById('output');
+            const aiOutput = document.getElementById('aiOutput');
+            const loadingContainer = document.getElementById('loadingContainer');
+            
+            let recognition;
+            let isRecording = false;
+            
+            // Check if browser supports the Web Speech API
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                status.textContent = 'Your browser does not support speech recognition.';
+                status.classList.add('error');
+                startButton.disabled = true;
+                return;
+            }
+            
+            // Initialize speech recognition
+            function initRecognition() {
+                // Use the appropriate constructor based on browser support
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+                
+                recognition.onstart = function() {
+                    isRecording = true;
+                    status.textContent = 'Listening... Speak now';
+                    status.classList.add('recording');
+                    startButton.disabled = true;
+                    stopButton.disabled = false;
+                };
+                
+                recognition.onend = function() {
+                    if (isRecording) {
+                        // If we're still supposed to be recording, restart recognition
+                        recognition.start();
+                    } else {
+                        status.textContent = 'Recording stopped';
+                        status.classList.remove('recording');
+                        startButton.disabled = false;
+                        stopButton.disabled = true;
+                    }
+                };
+                
+                recognition.onresult = function(event) {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript + ' ';
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    if (finalTranscript) {
+                        // Append final text to output
+                        output.innerHTML += finalTranscript;
+                    }
+                    
+                    // Show interim results
+                    if (interimTranscript) {
+                        const interimSpan = document.createElement('span');
+                        interimSpan.classList.add('interim');
+                        interimSpan.style.color = '#999';
+                        interimSpan.textContent = interimTranscript;
+                        
+                        // Remove any previous interim results
+                        const existingInterim = output.querySelector('.interim');
+                        if (existingInterim) {
+                            output.removeChild(existingInterim);
+                        }
+                        
+                        output.appendChild(interimSpan);
+                    }
+                };
+                
+                recognition.onerror = function(event) {
+                    if (event.error === 'no-speech') {
+                        status.textContent = 'No speech detected. Try again.';
+                    } else {
+                        status.textContent = 'Error: ' + event.error;
+                        status.classList.add('error');
+                        isRecording = false;
+                        startButton.disabled = false;
+                        stopButton.disabled = true;
+                    }
+                };
+            }
+            
+            // Start recording
+            startButton.addEventListener('click', function() {
+                initRecognition();
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error("Recognition error:", error);
+                    status.textContent = 'Error starting recognition: ' + error.message;
+                    status.classList.add('error');
+                }
+            });
+            
+            // Stop recording
+            stopButton.addEventListener('click', function() {
+                isRecording = false;
+                if (recognition) {
+                    recognition.stop();
+                }
+            });
+            
+            // Clear output
+            resetButton.addEventListener('click', function() {
+                output.innerHTML = '';
+                aiOutput.innerHTML = '';
+                status.textContent = 'Text cleared';
+                setTimeout(() => {
+                    status.textContent = isRecording ? 'Listening... Speak now' : 'Ready to record';
+                }, 1500);
+            });
+            
+            // Process text with AI
+            processButton.addEventListener('click', async function() {
+                const text = output.innerText.trim();
+                
+                if (!text) {
+                    status.textContent = 'Please record or type some text first';
+                    status.classList.add('error');
+                    setTimeout(() => {
+                        status.textContent = isRecording ? 'Listening... Speak now' : 'Ready to record';
+                        status.classList.remove('error');
+                    }, 2000);
+                    return;
+                }
+                
+                // Show loading indicator
+                loadingContainer.style.display = 'block';
+                status.textContent = 'Sending to AI...';
+                
+                try {
+                    // Send text to make.com
+                    const response = await sendToMake(text);
+                    
+                    // Display AI response
+                    aiOutput.innerHTML = response;
+                    status.textContent = 'AI response received';
+                } catch (error) {
+                    console.error('Error processing with AI:', error);
+                    status.textContent = 'Error: Could not process with AI';
+                    status.classList.add('error');
+                    aiOutput.innerHTML = 'An error occurred while processing your request. Please try again.';
+                } finally {
+                    // Hide loading indicator
+                    loadingContainer.style.display = 'none';
+                    setTimeout(() => {
+                        status.textContent = isRecording ? 'Listening... Speak now' : 'Ready to record';
+                        status.classList.remove('error');
+                    }, 2000);
+                }
+            });
+            
+            // Function to send text to make.com
+            async function sendToMake(text) {
+                // Replace this URL with your actual make.com webhook URL
+                const makeWebhookUrl = 'https://hook.eu1.make.com/YOUR_WEBHOOK_ID';
+                
+                try {
+                    const response = await fetch(makeWebhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text }),
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Return the AI response from make.com
+                    // You may need to adjust this based on the actual structure of the response
+                    return data.aiResponse || "No response received from AI";
+                } catch (error) {
+                    console.error('Error sending data to make.com:', error);
+                    throw error;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
