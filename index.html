@@ -194,6 +194,91 @@
             let visualizerCanvasCtx = null;
             let animationId = null;
             
+            // Initialize audio visualizer
+            function initAudioVisualizer(stream) {
+                // Create audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create analyser node
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                // Connect audio source to analyser
+                audioSource = audioContext.createMediaStreamSource(stream);
+                audioSource.connect(analyser);
+                
+                // Set up canvas
+                visualizerCanvas = document.getElementById('audioVisualizer');
+                visualizerCanvasCtx = visualizerCanvas.getContext('2d');
+                
+                // Start drawing
+                drawVisualizer();
+            }
+            
+            // Draw visualizer
+            function drawVisualizer() {
+                // Get canvas dimensions
+                const width = visualizerCanvas.width;
+                const height = visualizerCanvas.height;
+                
+                // Set up animation frame
+                animationId = requestAnimationFrame(drawVisualizer);
+                
+                // Get frequency data
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Clear canvas
+                visualizerCanvasCtx.clearRect(0, 0, width, height);
+                
+                // Set bar width based on canvas and buffer length
+                const barWidth = (width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+                
+                // Draw bars
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 2;
+                    
+                    // Create gradient
+                    const gradient = visualizerCanvasCtx.createLinearGradient(0, 0, 0, height);
+                    gradient.addColorStop(0, '#3498db');
+                    gradient.addColorStop(1, '#9b59b6');
+                    
+                    visualizerCanvasCtx.fillStyle = gradient;
+                    visualizerCanvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
+                    
+                    x += barWidth + 1;
+                }
+            }
+            
+            // Stop visualizer
+            function stopVisualizer() {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                
+                if (audioSource) {
+                    audioSource.disconnect();
+                    audioSource = null;
+                }
+                
+                if (audioContext) {
+                    if (audioContext.state !== 'closed') {
+                        audioContext.close().catch(err => console.error('Error closing audio context:', err));
+                    }
+                    audioContext = null;
+                }
+                
+                if (visualizerCanvas && visualizerCanvasCtx) {
+                    visualizerCanvasCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+                }
+            }
+            
             // Charts
             let sentimentChart = null;
             let topicChart = null;
@@ -254,6 +339,9 @@
                     
                     // Initialize audio visualizer
                     initAudioVisualizer(stream);
+                    
+                    // Show visualizer container
+                    document.getElementById('visualizerContainer').classList.remove('hidden');
                     
                     // Start timer
                     recordingStartTime = Date.now();
