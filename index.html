@@ -6,7 +6,7 @@
     <title>Audio to Text with AI Response</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
@@ -35,6 +35,7 @@
         .controls {
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -47,6 +48,9 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
         button:hover {
             background-color: #2980b9;
@@ -93,6 +97,10 @@
             padding: 10px;
             font-size: 16px;
             background-color: white;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+            box-sizing: border-box;
         }
         .column-header {
             font-weight: bold;
@@ -128,11 +136,31 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            button {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+        #browserMessage {
+            display: none;
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #fff3cd;
+            color: #856404;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Audio to Text with AI Response</h1>
+        <div id="browserMessage">For best results, use Chrome, Edge, or Safari.</div>
         <div class="status" id="status">Ready to record</div>
         <div class="controls">
             <button id="startButton">Start Recording</button>
@@ -157,7 +185,6 @@
         <div class="info">
             <p>Click "Start Recording" and speak into your microphone. Your speech will be converted to text in real-time.</p>
             <p>Click "Process with AI" to send your text to the AI and get a response.</p>
-            <p>Note: This feature requires microphone access and works best in Chrome, Edge, or Safari.</p>
         </div>
     </div>
 
@@ -171,12 +198,26 @@
             const output = document.getElementById('output');
             const aiOutput = document.getElementById('aiOutput');
             const loadingContainer = document.getElementById('loadingContainer');
+            const browserMessage = document.getElementById('browserMessage');
             
-            let recognition;
+            let recognition = null;
             let isRecording = false;
+            let recognitionSupported = false;
+            
+            // Check browser compatibility
+            const isChrome = !!window.chrome;
+            const isFirefox = typeof InstallTrigger !== 'undefined';
+            const isEdge = navigator.userAgent.indexOf("Edg") != -1;
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            
+            if (!(isChrome || isEdge || isSafari)) {
+                browserMessage.style.display = 'block';
+            }
             
             // Check if browser supports the Web Speech API
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                recognitionSupported = true;
+            } else {
                 status.textContent = 'Your browser does not support speech recognition.';
                 status.classList.add('error');
                 startButton.disabled = true;
@@ -185,97 +226,154 @@
             
             // Initialize speech recognition
             function initRecognition() {
-                // Use the appropriate constructor based on browser support
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                recognition.lang = 'en-US';
-                
-                recognition.onstart = function() {
-                    isRecording = true;
-                    status.textContent = 'Listening... Speak now';
-                    status.classList.add('recording');
-                    startButton.disabled = true;
-                    stopButton.disabled = false;
-                };
-                
-                recognition.onend = function() {
-                    if (isRecording) {
-                        // If we're still supposed to be recording, restart recognition
-                        recognition.start();
+                try {
+                    // Use the appropriate constructor based on browser support
+                    if ('SpeechRecognition' in window) {
+                        recognition = new SpeechRecognition();
+                    } else if ('webkitSpeechRecognition' in window) {
+                        recognition = new webkitSpeechRecognition();
                     } else {
-                        status.textContent = 'Recording stopped';
-                        status.classList.remove('recording');
-                        startButton.disabled = false;
-                        stopButton.disabled = true;
+                        throw new Error('Speech recognition not supported');
                     }
-                };
-                
-                recognition.onresult = function(event) {
-                    let interimTranscript = '';
-                    let finalTranscript = '';
                     
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript + ' ';
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+                    
+                    recognition.onstart = function() {
+                        isRecording = true;
+                        status.textContent = 'Listening... Speak now';
+                        status.classList.add('recording');
+                        startButton.disabled = true;
+                        stopButton.disabled = false;
+                    };
+                    
+                    recognition.onend = function() {
+                        if (isRecording) {
+                            // If we're still supposed to be recording, restart recognition
+                            try {
+                                recognition.start();
+                            } catch (e) {
+                                console.error('Error restarting recognition:', e);
+                                isRecording = false;
+                                status.textContent = 'Recording stopped due to error';
+                                status.classList.remove('recording');
+                                startButton.disabled = false;
+                                stopButton.disabled = true;
+                            }
                         } else {
-                            interimTranscript += transcript;
+                            status.textContent = 'Recording stopped';
+                            status.classList.remove('recording');
+                            startButton.disabled = false;
+                            stopButton.disabled = true;
                         }
-                    }
+                    };
                     
-                    if (finalTranscript) {
-                        // Append final text to output
-                        output.innerHTML += finalTranscript;
-                    }
-                    
-                    // Show interim results
-                    if (interimTranscript) {
-                        const interimSpan = document.createElement('span');
-                        interimSpan.classList.add('interim');
-                        interimSpan.style.color = '#999';
-                        interimSpan.textContent = interimTranscript;
+                    recognition.onresult = function(event) {
+                        let interimTranscript = '';
+                        let finalTranscript = '';
                         
-                        // Remove any previous interim results
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript + ' ';
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+                        
+                        if (finalTranscript) {
+                            // Append final text to output
+                            output.innerHTML += finalTranscript;
+                        }
+                        
+                        // Show interim results
                         const existingInterim = output.querySelector('.interim');
                         if (existingInterim) {
                             output.removeChild(existingInterim);
                         }
                         
-                        output.appendChild(interimSpan);
-                    }
-                };
-                
-                recognition.onerror = function(event) {
-                    if (event.error === 'no-speech') {
-                        status.textContent = 'No speech detected. Try again.';
-                    } else {
-                        status.textContent = 'Error: ' + event.error;
+                        if (interimTranscript) {
+                            const interimSpan = document.createElement('span');
+                            interimSpan.classList.add('interim');
+                            interimSpan.style.color = '#999';
+                            interimSpan.textContent = interimTranscript;
+                            output.appendChild(interimSpan);
+                        }
+                    };
+                    
+                    recognition.onerror = function(event) {
+                        console.error('Recognition error:', event.error);
+                        
+                        if (event.error === 'no-speech') {
+                            status.textContent = 'No speech detected. Try again.';
+                        } else if (event.error === 'audio-capture') {
+                            status.textContent = 'Error: Microphone not detected or not allowed.';
+                        } else if (event.error === 'not-allowed') {
+                            status.textContent = 'Error: Microphone access denied. Check permissions.';
+                        } else {
+                            status.textContent = 'Error: ' + event.error;
+                        }
+                        
                         status.classList.add('error');
                         isRecording = false;
                         startButton.disabled = false;
                         stopButton.disabled = true;
-                    }
-                };
+                        
+                        // Auto-remove error class after 3 seconds
+                        setTimeout(() => {
+                            status.classList.remove('error');
+                        }, 3000);
+                    };
+                    
+                } catch (error) {
+                    console.error('Error initializing speech recognition:', error);
+                    status.textContent = 'Could not initialize speech recognition: ' + error.message;
+                    status.classList.add('error');
+                    startButton.disabled = false;
+                    recognitionSupported = false;
+                }
             }
             
             // Start recording
             startButton.addEventListener('click', function() {
-                initRecognition();
-                try {
-                    recognition.start();
-                } catch (error) {
-                    console.error("Recognition error:", error);
-                    status.textContent = 'Error starting recognition: ' + error.message;
+                if (!recognitionSupported) {
+                    status.textContent = 'Speech recognition not supported in this browser';
                     status.classList.add('error');
+                    return;
                 }
+                
+                // Ask for microphone permission explicitly
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        // Permission granted, initialize and start recognition
+                        stream.getTracks().forEach(track => track.stop()); // Stop the stream as we don't need it anymore
+                        
+                        initRecognition();
+                        try {
+                            recognition.start();
+                        } catch (error) {
+                            console.error("Recognition error:", error);
+                            status.textContent = 'Error starting recognition: ' + error.message;
+                            status.classList.add('error');
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('Microphone permission denied:', err);
+                        status.textContent = 'Microphone access denied. Please check your browser settings.';
+                        status.classList.add('error');
+                    });
             });
             
             // Stop recording
             stopButton.addEventListener('click', function() {
                 isRecording = false;
                 if (recognition) {
-                    recognition.stop();
+                    try {
+                        recognition.stop();
+                    } catch (e) {
+                        console.error('Error stopping recognition:', e);
+                    }
                 }
             });
             
@@ -335,6 +433,8 @@
                 const makeWebhookUrl = 'https://hook.us2.make.com/6idc80ec0mzgdbqszdk29y3oq94knvu9';
                 
                 try {
+                    console.log('Sending to make.com:', text);
+                    
                     const response = await fetch(makeWebhookUrl, {
                         method: 'POST',
                         headers: {
@@ -343,17 +443,47 @@
                         body: JSON.stringify({ text }),
                     });
                     
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    console.log('Response status:', response.status);
+                    
+                    // Try to get response as text first
+                    const responseText = await response.text();
+                    console.log('Raw response:', responseText);
+                    
+                    // Then try to parse as JSON if possible
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                        console.log('Parsed response data:', data);
+                    } catch (e) {
+                        console.warn('Failed to parse JSON response:', e);
+                        return responseText || "Received non-JSON response from service";
                     }
                     
-                    const data = await response.json();
-                    
-                    // Return the AI response from make.com
-                    // You may need to adjust this based on the actual structure of the response
-                    return data.aiResponse || "No response received from AI";
+                    // Handle various response formats
+                    if (data.aiResponse) {
+                        return data.aiResponse;
+                    } else if (data.response) {
+                        return data.response;
+                    } else if (data.output) {
+                        return data.output;
+                    } else if (data.result) {
+                        return data.result;
+                    } else if (data.text) {
+                        return data.text;
+                    } else if (data.message) {
+                        return data.message;
+                    } else if (typeof data === 'string') {
+                        return data;
+                    } else {
+                        // If no recognized field, stringify the whole response
+                        console.warn('Unrecognized response format:', data);
+                        return JSON.stringify(data);
+                    }
                 } catch (error) {
                     console.error('Error sending data to make.com:', error);
+                    if (error.name === 'AbortError') {
+                        return "Request timed out. The service may be overloaded or unavailable.";
+                    }
                     throw error;
                 }
             }
