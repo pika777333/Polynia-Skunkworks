@@ -3,143 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio to Text with ChatGPT</title>
+    <title>Real-Time Sales Conversation Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.5.0/Recharts.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-            color: #333;
-        }
-        .container {
-            background-color: #f9f9f9;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        .status {
-            text-align: center;
-            font-weight: bold;
-            margin: 15px 0;
-            min-height: 24px;
-        }
-        .recording {
-            color: #e74c3c;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        #startButton {
-            background-color: #2ecc71;
-        }
-        #startButton:hover {
-            background-color: #27ae60;
-        }
-        #stopButton {
-            background-color: #e74c3c;
-        }
-        #stopButton:hover {
-            background-color: #c0392b;
-        }
-        #resetButton {
-            background-color: #95a5a6;
-        }
-        #resetButton:hover {
-            background-color: #7f8c8d;
-        }
-        .output-container {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .output-box {
-            width: 100%;
-            min-height: 150px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            font-size: 16px;
-            background-color: white;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-            word-break: break-word;
-            box-sizing: border-box;
-        }
-        .column-header {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #2c3e50;
-        }
-        .error {
-            color: #e74c3c;
-            text-align: center;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .info {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .loading {
-            text-align: center;
-            margin: 10px 0;
-        }
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: #3498db;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        @media (max-width: 600px) {
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            button {
-                width: 100%;
-                max-width: 250px;
-            }
-        }
         .record-dot {
             display: inline-block;
             width: 12px;
@@ -154,174 +21,195 @@
             50% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(0.8); opacity: 0.8; }
         }
-        #audioVisualizer {
-            width: 100%;
-            height: 60px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
         }
-        .visualizer-bar {
-            position: absolute;
-            bottom: 0;
-            background-color: #3498db;
-            width: 3px;
-            margin-right: 2px;
-            border-radius: 2px 2px 0 0;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        #audioTimer {
-            text-align: center;
-            font-size: 14px;
-            margin-top: 5px;
-            color: #7f8c8d;
+        .highlight {
+            background-color: #FFFF00;
+            font-weight: bold;
         }
-        #rawResponse {
-            margin-top: 20px;
-            font-family: monospace;
-            font-size: 12px;
-            overflow: auto;
-            max-height: 200px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            display: none;
-        }
-        #showRawResponseButton {
-            background-color: #34495e;
-            font-size: 12px;
-            padding: 5px 10px;
-            margin-top: 5px;
+        .transcript-container {
+            max-height: 400px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Audio to Text with AI</h1>
-        <div class="status" id="status">Ready to record</div>
-        
-        <div class="controls">
-            <button id="startButton">Start Recording</button>
-            <button id="stopButton" disabled>Stop Recording</button>
-            <button id="resetButton">Clear All</button>
-        </div>
-        
-        <div id="audioVisualizer"></div>
-        <div id="audioTimer">00:00</div>
-        
-        <div class="output-container">
-            <div>
-                <div class="column-header">AI Response:</div>
-                <div class="output-box" id="output"></div>
-                <div id="loadingContainer" class="loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <span>Processing audio...</span>
+<body class="bg-gray-50">
+    <div class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow p-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">AI Sales Data Analyst Dashboard</h1>
+                <div class="flex items-center space-x-4">
+                    <button 
+                        id="recordButton"
+                        class="px-4 py-2 rounded-md font-medium bg-green-500 text-white"
+                    >
+                        Start Recording
+                    </button>
+                    <div id="recordingStatus" class="hidden">
+                        <span class="record-dot"></span> Recording...
+                    </div>
+                    <div id="processingStatus" class="hidden">
+                        <span class="spinner"></span> Processing...
+                    </div>
                 </div>
             </div>
-        </div>
+        </header>
         
-        <button id="showRawResponseButton">Show Raw Response</button>
-        <div id="rawResponse"></div>
-        
-        <div class="info">
-            <p id="recordingInfo">Click "Start Recording" and speak into your microphone. AI will transcribe and respond to your speech.</p>
-            <p id="debugInfo" style="font-size: 12px; color: #999;"></p>
-        </div>
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-auto">
+            <div class="grid grid-cols-12 gap-6">
+                <!-- Transcript Panel -->
+                <div class="col-span-6 bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Live Transcript</h2>
+                    </div>
+                    <div id="transcript" class="p-4 transcript-container"></div>
+                </div>
+                
+                <!-- Sentiment Chart -->
+                <div class="col-span-6 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Sentiment Trajectory</h2>
+                    </div>
+                    <div id="sentimentChart" class="p-4" style="height: 300px;">
+                        <canvas id="sentimentCanvas" width="100%" height="100%"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Topic Distribution -->
+                <div class="col-span-4 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Topic Distribution</h2>
+                    </div>
+                    <div id="topicChart" class="p-4" style="height: 250px;">
+                        <canvas id="topicCanvas" width="100%" height="100%"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Pain Points -->
+                <div class="col-span-4 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Pain Points</h2>
+                    </div>
+                    <div id="painPointsChart" class="p-4" style="height: 250px;">
+                        <canvas id="painPointsCanvas" width="100%" height="100%"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Budget Estimation -->
+                <div class="col-span-4 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Budget Estimation</h2>
+                    </div>
+                    <div id="budgetEstimation" class="p-4" style="height: 250px;">
+                        <div class="flex flex-col items-center justify-center h-full">
+                            <div id="budgetTarget" class="text-3xl font-bold text-gray-700">
+                                $0
+                            </div>
+                            <div class="text-sm text-gray-500 mt-2">
+                                Estimated Target Budget
+                            </div>
+                            <div class="w-full mt-6 bg-gray-200 rounded-full h-4">
+                                <div 
+                                    id="budgetProgressBar"
+                                    class="bg-blue-600 h-4 rounded-full" 
+                                    style="width: 0%"
+                                ></div>
+                            </div>
+                            <div class="w-full flex justify-between text-xs mt-1">
+                                <span id="budgetMin">$0</span>
+                                <span id="budgetCurrent">Current: $0</span>
+                                <span id="budgetMax">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Key Insights -->
+                <div class="col-span-12 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Key Insights</h2>
+                    </div>
+                    <div class="p-4">
+                        <ul id="keyInsights" class="list-disc pl-6 space-y-2">
+                            <li class="text-gray-500">Insights will appear here once enough conversation data is gathered.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
+    <!-- Load Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const startButton = document.getElementById('startButton');
-            const stopButton = document.getElementById('stopButton');
-            const resetButton = document.getElementById('resetButton');
-            const status = document.getElementById('status');
-            const output = document.getElementById('output');
-            const loadingContainer = document.getElementById('loadingContainer');
-            const audioVisualizer = document.getElementById('audioVisualizer');
-            const audioTimer = document.getElementById('audioTimer');
-            const showRawResponseButton = document.getElementById('showRawResponseButton');
-            const rawResponse = document.getElementById('rawResponse');
-            const debugInfo = document.getElementById('debugInfo');
+            // DOM elements
+            const recordButton = document.getElementById('recordButton');
+            const recordingStatus = document.getElementById('recordingStatus');
+            const processingStatus = document.getElementById('processingStatus');
+            const transcriptContainer = document.getElementById('transcript');
             
-            let mediaRecorder;
+            // State variables
+            let mediaRecorder = null;
             let audioChunks = [];
-            let recordingStartTime;
-            let timerInterval;
-            let audioContext;
-            let analyser;
-            let visualizerBars = [];
-            let lastRawResponse = '';
+            let isRecording = false;
+            let sendInterval = null;
+            let conversationData = {
+                transcript: [],
+                sentimentTrajectory: [],
+                topicDistribution: [],
+                painPoints: [],
+                budgetEstimation: {
+                    min: 0,
+                    max: 0,
+                    target: 0,
+                    current: 0
+                },
+                keyInsights: []
+            };
+            let recordingStartTime = 0;
+            let lastProcessedTime = 0;
             
-            // Debug info
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            debugInfo.textContent = `Device: ${isMobile ? 'Mobile' : 'Desktop'}, Browser: ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other'}`;
+            // Charts
+            let sentimentChart = null;
+            let topicChart = null;
+            let painPointsChart = null;
             
-            // Create visualizer bars
-            function createVisualizer() {
-                audioVisualizer.innerHTML = '';
-                visualizerBars = [];
-                
-                const barCount = 50;
-                const barWidth = audioVisualizer.clientWidth / barCount - 2;
-                
-                for (let i = 0; i < barCount; i++) {
-                    const bar = document.createElement('div');
-                    bar.className = 'visualizer-bar';
-                    bar.style.left = (i * (barWidth + 2)) + 'px';
-                    bar.style.width = barWidth + 'px';
-                    bar.style.height = '0px';
-                    audioVisualizer.appendChild(bar);
-                    visualizerBars.push(bar);
-                }
-            }
+            // Initialize charts
+            initializeCharts();
             
-            // Update timer display
-            function updateTimer() {
-                const now = Date.now();
-                const elapsedSeconds = Math.floor((now - recordingStartTime) / 1000);
-                const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
-                const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
-                audioTimer.textContent = `${minutes}:${seconds}`;
-            }
-            
-            // Update visualizer display
-            function updateVisualizer(dataArray) {
-                for (let i = 0; i < visualizerBars.length; i++) {
-                    const value = dataArray[i * Math.floor(dataArray.length / visualizerBars.length)];
-                    const height = value / 255 * audioVisualizer.clientHeight;
-                    visualizerBars[i].style.height = height + 'px';
-                }
-            }
-            
-            // Show/hide raw response
-            showRawResponseButton.addEventListener('click', function() {
-                if (rawResponse.style.display === 'none' || !rawResponse.style.display) {
-                    rawResponse.style.display = 'block';
-                    showRawResponseButton.textContent = 'Hide Raw Response';
+            // Start/stop recording button
+            recordButton.addEventListener('click', function() {
+                if (isRecording) {
+                    stopRecording();
                 } else {
-                    rawResponse.style.display = 'none';
-                    showRawResponseButton.textContent = 'Show Raw Response';
+                    startRecording();
                 }
             });
             
             // Start recording
-            startButton.addEventListener('click', async function() {
+            async function startRecording() {
                 try {
                     // Request microphone access
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     
-                    // Set up audio context for visualizer
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const source = audioContext.createMediaStreamSource(stream);
-                    analyser = audioContext.createAnalyser();
-                    analyser.fftSize = 256;
-                    source.connect(analyser);
-                    
-                    // Create visualizer
-                    createVisualizer();
+                    // Reset conversation data
+                    resetConversationData();
                     
                     // Set up media recorder
                     mediaRecorder = new MediaRecorder(stream);
@@ -332,104 +220,76 @@
                         audioChunks.push(event.data);
                     };
                     
-                    // Handle recording stop
-                    mediaRecorder.onstop = async function() {
-                        // Clear timer and visualizer
-                        clearInterval(timerInterval);
-                        
-                        // Create audio blob
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        
-                        // Stop all tracks
-                        stream.getTracks().forEach(track => track.stop());
-                        
-                        // Update UI
-                        status.textContent = 'Processing audio...';
-                        loadingContainer.style.display = 'block';
-                        
-                        try {
-                            // Process audio with make.com
-                            await processAudio(audioBlob);
-                        } catch (error) {
-                            console.error('Error processing audio:', error);
-                            status.textContent = 'Error processing audio';
-                            status.classList.add('error');
-                            loadingContainer.style.display = 'none';
-                            
-                            // Display error in output
-                            output.textContent = 'Error: ' + error.message;
-                        }
-                    };
-                    
                     // Start recording
-                    mediaRecorder.start(1000); // Collect data every second
-                    
-                    // Set up visualizer update
-                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-                    
-                    const updateVisualizerLoop = () => {
-                        if (mediaRecorder && mediaRecorder.state === 'recording') {
-                            analyser.getByteFrequencyData(dataArray);
-                            updateVisualizer(dataArray);
-                            requestAnimationFrame(updateVisualizerLoop);
-                        }
-                    };
-                    
-                    updateVisualizerLoop();
-                    
-                    // Start timer
+                    mediaRecorder.start(1000); // Get data every second
                     recordingStartTime = Date.now();
-                    timerInterval = setInterval(updateTimer, 1000);
+                    lastProcessedTime = recordingStartTime;
+                    
+                    // Set up interval to send audio chunks every 5 seconds
+                    sendInterval = setInterval(() => {
+                        const currentChunks = [...audioChunks];
+                        audioChunks = [];
+                        
+                        if (currentChunks.length > 0) {
+                            const audioBlob = new Blob(currentChunks, { type: 'audio/webm' });
+                            processAudioChunk(audioBlob);
+                        }
+                    }, 5000);
                     
                     // Update UI
-                    status.innerHTML = '<span class="record-dot"></span> Recording...';
-                    status.classList.add('recording');
-                    startButton.disabled = true;
-                    stopButton.disabled = false;
-                    output.textContent = '';
+                    isRecording = true;
+                    recordButton.textContent = 'Stop Recording';
+                    recordButton.classList.replace('bg-green-500', 'bg-red-500');
+                    recordingStatus.classList.remove('hidden');
                     
                 } catch (err) {
                     console.error('Error accessing microphone:', err);
-                    status.textContent = 'Error: Could not access microphone. ' + err.message;
-                    status.classList.add('error');
+                    alert('Error accessing microphone: ' + err.message);
                 }
-            });
+            }
             
             // Stop recording
-            stopButton.addEventListener('click', function() {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
+            function stopRecording() {
+                if (mediaRecorder && isRecording) {
+                    // Stop media recorder
                     mediaRecorder.stop();
-                    status.textContent = 'Recording stopped';
-                    status.classList.remove('recording');
-                    startButton.disabled = false;
-                    stopButton.disabled = true;
+                    
+                    // Stop all tracks
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    
+                    // Clear send interval
+                    clearInterval(sendInterval);
+                    
+                    // Process remaining audio chunks
+                    if (audioChunks.length > 0) {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        processAudioChunk(audioBlob, true);
+                        audioChunks = [];
+                    }
+                    
+                    // Update UI
+                    isRecording = false;
+                    recordButton.textContent = 'Start Recording';
+                    recordButton.classList.replace('bg-red-500', 'bg-green-500');
+                    recordingStatus.classList.add('hidden');
                 }
-            });
+            }
             
-            // Clear all
-            resetButton.addEventListener('click', function() {
-                output.textContent = '';
-                rawResponse.textContent = '';
-                status.textContent = 'Text cleared';
-                setTimeout(() => {
-                    status.textContent = 'Ready to record';
-                }, 1500);
-            });
-            
-            // Process audio with make.com
-            async function processAudio(audioBlob) {
-                // Replace this URL with your actual make.com webhook URL
-                const makeWebhookUrl = 'https://hook.us2.make.com/pj83qpi1fbz2eo7jhe0x3c317b8vuhta';
+            // Process audio chunk
+            async function processAudioChunk(audioBlob, isFinal = false) {
+                // Show processing status
+                processingStatus.classList.remove('hidden');
                 
                 try {
                     // Create form data with audio file
                     const formData = new FormData();
                     formData.append('audio', audioBlob, 'recording.webm');
-                    
-                    // Log the blob size for debugging
-                    console.log('Audio blob size:', audioBlob.size, 'bytes');
+                    formData.append('timestamp', Date.now() - recordingStartTime);
+                    formData.append('isFinal', isFinal);
                     
                     // Send to make.com
+                    const makeWebhookUrl = 'https://hook.eu1.make.com/YOUR_WEBHOOK_ID';
+                    
                     const response = await fetch(makeWebhookUrl, {
                         method: 'POST',
                         body: formData
@@ -437,60 +297,290 @@
                     
                     // Check response
                     if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorText}`);
+                        throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     
-                    // Get response text first
-                    const responseText = await response.text();
-                    console.log('Raw response:', responseText);
+                    // Parse response
+                    const data = await response.json();
+                    console.log('Analysis response:', data);
                     
-                    // Store raw response for debugging
-                    lastRawResponse = responseText;
-                    rawResponse.textContent = responseText;
-                    
-                    // Try to parse as JSON (if it is JSON)
-                    let data;
-                    try {
-                        data = JSON.parse(responseText);
-                        console.log('Parsed response:', data);
-                    } catch (e) {
-                        console.log('Response is not JSON, using as plain text');
-                        data = { text: responseText };
-                    }
-                    
-                    // Display response in a flexible way
-                    if (data.transcription) {
-                        // If the response has a transcription field
-                        output.textContent = data.transcription;
-                    } else if (data.text) {
-                        // If the response has a text field
-                        output.textContent = data.text;
-                    } else if (data.aiResponse) {
-                        // If the response has an aiResponse field
-                        output.textContent = data.aiResponse;
-                    } else if (data.result) {
-                        // If the response has a result field
-                        output.textContent = data.result;
-                    } else if (typeof data === 'object') {
-                        // If it's an object but doesn't have expected fields, display key values
-                        output.textContent = Object.entries(data)
-                            .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
-                            .join('\n');
-                    } else {
-                        // Fallback to showing the raw response
-                        output.textContent = responseText;
-                    }
-                    
-                    // Update UI
-                    status.textContent = 'Audio processed successfully';
-                    loadingContainer.style.display = 'none';
+                    // Update the dashboard with new data
+                    updateDashboard(data);
                     
                 } catch (error) {
                     console.error('Error processing audio:', error);
-                    rawResponse.textContent = `Error: ${error.message}`;
-                    throw error;
+                } finally {
+                    // Hide processing status
+                    processingStatus.classList.add('hidden');
                 }
+            }
+            
+            // Update dashboard with new data
+            function updateDashboard(data) {
+                // Merge new data with existing conversation data
+                mergeConversationData(data);
+                
+                // Update transcript
+                updateTranscript();
+                
+                // Update charts
+                updateCharts();
+                
+                // Update budget estimation
+                updateBudgetEstimation();
+                
+                // Update key insights
+                updateKeyInsights();
+            }
+            
+            // Merge new conversation data
+            function mergeConversationData(data) {
+                // Merge transcript (check for new entries only)
+                if (data.transcript && Array.isArray(data.transcript)) {
+                    const existingIds = new Set(conversationData.transcript.map(item => item.timestamp));
+                    const newEntries = data.transcript.filter(item => !existingIds.has(item.timestamp));
+                    conversationData.transcript = [...conversationData.transcript, ...newEntries];
+                    // Sort transcript by timestamp
+                    conversationData.transcript.sort((a, b) => a.timestamp - b.timestamp);
+                }
+                
+                // Update sentiment trajectory
+                if (data.sentimentTrajectory && Array.isArray(data.sentimentTrajectory)) {
+                    conversationData.sentimentTrajectory = data.sentimentTrajectory;
+                }
+                
+                // Update topic distribution
+                if (data.topicDistribution && Array.isArray(data.topicDistribution)) {
+                    conversationData.topicDistribution = data.topicDistribution;
+                }
+                
+                // Update pain points
+                if (data.painPoints && Array.isArray(data.painPoints)) {
+                    conversationData.painPoints = data.painPoints;
+                }
+                
+                // Update budget estimation
+                if (data.budgetEstimation) {
+                    conversationData.budgetEstimation = data.budgetEstimation;
+                }
+                
+                // Update key insights
+                if (data.keyInsights && Array.isArray(data.keyInsights)) {
+                    conversationData.keyInsights = data.keyInsights;
+                }
+            }
+            
+            // Update transcript display
+            function updateTranscript() {
+                // Clear transcript container first (or we could just append new entries)
+                transcriptContainer.innerHTML = '';
+                
+                // Create transcript entries
+                conversationData.transcript.forEach((entry, index) => {
+                    const entryElement = document.createElement('div');
+                    entryElement.className = 'mb-4';
+                    
+                    const speakerElement = document.createElement('div');
+                    speakerElement.className = `font-semibold ${entry.speaker === 'Salesperson' ? 'text-blue-600' : 'text-green-600'}`;
+                    
+                    // Format timestamp as MM:SS
+                    const minutes = Math.floor(entry.timestamp / 1000 / 60);
+                    const seconds = Math.floor((entry.timestamp / 1000) % 60).toString().padStart(2, '0');
+                    speakerElement.textContent = `${entry.speaker} (${minutes}:${seconds})`;
+                    
+                    const textElement = document.createElement('div');
+                    textElement.className = 'mt-1 text-gray-700';
+                    textElement.innerHTML = highlightKeywords(entry.text);
+                    
+                    entryElement.appendChild(speakerElement);
+                    entryElement.appendChild(textElement);
+                    transcriptContainer.appendChild(entryElement);
+                });
+                
+                // Scroll to bottom
+                transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+            }
+            
+            // Highlight keywords in text
+            function highlightKeywords(text) {
+                const keywords = ['budget', 'concerned', 'reliability', 'safety', 'features', 'test drive', 'price', 'cost', 'warranty', 'financing', 'payments'];
+                
+                // Create a regular expression to match all keywords (case insensitive)
+                const regex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
+                
+                // Replace keywords with highlighted version
+                return text.replace(regex, '<span class="font-bold text-blue-600">$1</span>');
+            }
+            
+            // Initialize charts
+            function initializeCharts() {
+                // Sentiment Chart (Line Chart)
+                const sentimentCtx = document.getElementById('sentimentCanvas').getContext('2d');
+                sentimentChart = new Chart(sentimentCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'Salesperson',
+                                data: [],
+                                borderColor: '#0088FE',
+                                tension: 0.1,
+                                fill: false
+                            },
+                            {
+                                label: 'Customer',
+                                data: [],
+                                borderColor: '#00C49F',
+                                tension: 0.1,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                min: -1,
+                                max: 1,
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time (seconds)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Topic Distribution (Pie Chart)
+                const topicCtx = document.getElementById('topicCanvas').getContext('2d');
+                topicChart = new Chart(topicCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                
+                // Pain Points (Bar Chart)
+                const painPointsCtx = document.getElementById('painPointsCanvas').getContext('2d');
+                painPointsChart = new Chart(painPointsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Score',
+                            data: [],
+                            backgroundColor: '#FF8042'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update charts with new data
+            function updateCharts() {
+                // Update Sentiment Chart
+                if (conversationData.sentimentTrajectory.length > 0) {
+                    sentimentChart.data.labels = conversationData.sentimentTrajectory.map(entry => Math.floor(entry.time / 1000));
+                    sentimentChart.data.datasets[0].data = conversationData.sentimentTrajectory.map(entry => entry.salesperson);
+                    sentimentChart.data.datasets[1].data = conversationData.sentimentTrajectory.map(entry => entry.customer);
+                    sentimentChart.update();
+                }
+                
+                // Update Topic Distribution Chart
+                if (conversationData.topicDistribution.length > 0) {
+                    topicChart.data.labels = conversationData.topicDistribution.map(entry => entry.name);
+                    topicChart.data.datasets[0].data = conversationData.topicDistribution.map(entry => entry.value);
+                    topicChart.update();
+                }
+                
+                // Update Pain Points Chart
+                if (conversationData.painPoints.length > 0) {
+                    painPointsChart.data.labels = conversationData.painPoints.map(entry => entry.category);
+                    painPointsChart.data.datasets[0].data = conversationData.painPoints.map(entry => entry.score);
+                    painPointsChart.update();
+                }
+            }
+            
+            // Update budget estimation display
+            function updateBudgetEstimation() {
+                const { min, max, target, current } = conversationData.budgetEstimation;
+                
+                document.getElementById('budgetTarget').textContent = `$${target.toLocaleString()}`;
+                document.getElementById('budgetMin').textContent = `$${min.toLocaleString()}`;
+                document.getElementById('budgetMax').textContent = `$${max.toLocaleString()}`;
+                document.getElementById('budgetCurrent').textContent = `Current: $${current.toLocaleString()}`;
+                
+                // Calculate percentage for progress bar
+                const percentage = max > 0 ? (current / max * 100) : 0;
+                document.getElementById('budgetProgressBar').style.width = `${percentage}%`;
+            }
+            
+            // Update key insights
+            function updateKeyInsights() {
+                const keyInsightsContainer = document.getElementById('keyInsights');
+                keyInsightsContainer.innerHTML = '';
+                
+                if (conversationData.keyInsights.length > 0) {
+                    conversationData.keyInsights.forEach(insight => {
+                        const insightElement = document.createElement('li');
+                        insightElement.className = 'text-gray-700';
+                        insightElement.textContent = insight;
+                        keyInsightsContainer.appendChild(insightElement);
+                    });
+                } else {
+                    const placeholderElement = document.createElement('li');
+                    placeholderElement.className = 'text-gray-500';
+                    placeholderElement.textContent = 'Insights will appear here once enough conversation data is gathered.';
+                    keyInsightsContainer.appendChild(placeholderElement);
+                }
+            }
+            
+            // Reset conversation data
+            function resetConversationData() {
+                conversationData = {
+                    transcript: [],
+                    sentimentTrajectory: [],
+                    topicDistribution: [],
+                    painPoints: [],
+                    budgetEstimation: {
+                        min: 0,
+                        max: 0,
+                        target: 0,
+                        current: 0
+                    },
+                    keyInsights: []
+                };
+                
+                // Reset UI
+                updateTranscript();
+                updateCharts();
+                updateBudgetEstimation();
+                updateKeyInsights();
             }
         });
     </script>
