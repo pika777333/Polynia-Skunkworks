@@ -492,6 +492,11 @@
             
             // Reset charts to empty state
             function resetCharts() {
+                // Reset visualizer if it exists
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
                 // Reset Sentiment Chart
                 sentimentChart.data.labels = [];
                 sentimentChart.data.datasets[0].data = [];
@@ -517,6 +522,84 @@
                 
                 // Reset Key Insights
                 document.getElementById('keyInsights').innerHTML = '<li class="text-gray-500">Insights will appear here after analysis.</li>';
+            }
+            
+            // Initialize audio visualizer
+            function initAudioVisualizer(stream) {
+                // Show visualizer container
+                document.getElementById('visualizerContainer').classList.remove('hidden');
+                
+                // Get canvas and context
+                visualizerCanvas = document.getElementById('audioVisualizer');
+                visualizerCanvasCtx = visualizerCanvas.getContext('2d');
+                
+                // Set canvas dimensions
+                visualizerCanvas.width = visualizerCanvas.offsetWidth;
+                visualizerCanvas.height = visualizerCanvas.offsetHeight;
+                
+                // Create audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create analyzer
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                // Connect audio source
+                audioSource = audioContext.createMediaStreamSource(stream);
+                audioSource.connect(analyser);
+                
+                // Start drawing
+                function draw() {
+                    animationId = requestAnimationFrame(draw);
+                    
+                    // Get frequency data
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    // Clear canvas
+                    visualizerCanvasCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+                    
+                    // Set bar width and spacing
+                    const barWidth = (visualizerCanvas.width / bufferLength) * 2.5;
+                    let barHeight;
+                    let x = 0;
+                    
+                    // Draw bars
+                    for (let i = 0; i < bufferLength; i++) {
+                        barHeight = dataArray[i] / 2;
+                        
+                        // Create gradient
+                        const gradient = visualizerCanvasCtx.createLinearGradient(
+                            0, visualizerCanvas.height - barHeight, 0, visualizerCanvas.height
+                        );
+                        gradient.addColorStop(0, '#3B82F6'); // Blue-500
+                        gradient.addColorStop(1, '#60A5FA'); // Blue-400
+                        
+                        visualizerCanvasCtx.fillStyle = gradient;
+                        visualizerCanvasCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
+                        
+                        x += barWidth + 1;
+                    }
+                }
+                
+                draw();
+            }
+            
+            // Stop visualizer
+            function stopVisualizer() {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                
+                if (audioContext) {
+                    if (audioContext.state !== 'closed') {
+                        if (audioSource) {
+                            audioSource.disconnect();
+                        }
+                    }
+                }
             }
             
             // Update sentiment chart
