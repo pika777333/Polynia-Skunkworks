@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Sales Conversation Analyzer</title>
+    <title>Sales Conversation Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.5.0/Recharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .record-dot {
             display: inline-block;
@@ -34,10 +34,6 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        .highlight {
-            background-color: #FFFF00;
-            font-weight: bold;
-        }
         .transcript-container {
             max-height: 400px;
             overflow-y: auto;
@@ -59,8 +55,15 @@
                         Start Recording
                     </button>
                     <div id="recordingStatus" class="hidden">
-                        <span class="record-dot"></span> Recording...
+                        <span class="record-dot"></span> Recording... <span id="recordingTime">00:00</span>
                     </div>
+                    <button 
+                        id="processButton"
+                        class="px-4 py-2 rounded-md font-medium bg-blue-500 text-white opacity-50 cursor-not-allowed"
+                        disabled
+                    >
+                        Analyze Conversation
+                    </button>
                     <div id="processingStatus" class="hidden">
                         <span class="spinner"></span> Processing...
                     </div>
@@ -74,9 +77,11 @@
                 <!-- Transcript Panel -->
                 <div class="col-span-6 bg-white rounded-lg shadow overflow-hidden">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Live Transcript</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Conversation Transcript</h2>
                     </div>
-                    <div id="transcript" class="p-4 transcript-container"></div>
+                    <div id="transcript" class="p-4 transcript-container">
+                        <p class="text-gray-500">Transcript will appear here after recording and analysis.</p>
+                    </div>
                 </div>
                 
                 <!-- Sentiment Chart -->
@@ -84,8 +89,8 @@
                     <div class="p-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-700">Sentiment Trajectory</h2>
                     </div>
-                    <div id="sentimentChart" class="p-4" style="height: 300px;">
-                        <canvas id="sentimentCanvas" width="100%" height="100%"></canvas>
+                    <div class="p-4" style="height: 300px;">
+                        <canvas id="sentimentChart"></canvas>
                     </div>
                 </div>
                 
@@ -94,8 +99,8 @@
                     <div class="p-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-700">Topic Distribution</h2>
                     </div>
-                    <div id="topicChart" class="p-4" style="height: 250px;">
-                        <canvas id="topicCanvas" width="100%" height="100%"></canvas>
+                    <div class="p-4" style="height: 250px;">
+                        <canvas id="topicChart"></canvas>
                     </div>
                 </div>
                 
@@ -104,8 +109,8 @@
                     <div class="p-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-700">Pain Points</h2>
                     </div>
-                    <div id="painPointsChart" class="p-4" style="height: 250px;">
-                        <canvas id="painPointsCanvas" width="100%" height="100%"></canvas>
+                    <div class="p-4" style="height: 250px;">
+                        <canvas id="painPointsChart"></canvas>
                     </div>
                 </div>
                 
@@ -114,7 +119,7 @@
                     <div class="p-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-700">Budget Estimation</h2>
                     </div>
-                    <div id="budgetEstimation" class="p-4" style="height: 250px;">
+                    <div class="p-4" style="height: 250px;">
                         <div class="flex flex-col items-center justify-center h-full">
                             <div id="budgetTarget" class="text-3xl font-bold text-gray-700">
                                 $0
@@ -145,7 +150,7 @@
                     </div>
                     <div class="p-4">
                         <ul id="keyInsights" class="list-disc pl-6 space-y-2">
-                            <li class="text-gray-500">Insights will appear here once enough conversation data is gathered.</li>
+                            <li class="text-gray-500">Insights will appear here after analysis.</li>
                         </ul>
                     </div>
                 </div>
@@ -153,14 +158,13 @@
         </main>
     </div>
 
-    <!-- Load Chart.js for visualizations -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // DOM elements
             const recordButton = document.getElementById('recordButton');
+            const processButton = document.getElementById('processButton');
             const recordingStatus = document.getElementById('recordingStatus');
+            const recordingTime = document.getElementById('recordingTime');
             const processingStatus = document.getElementById('processingStatus');
             const transcriptContainer = document.getElementById('transcript');
             
@@ -168,22 +172,9 @@
             let mediaRecorder = null;
             let audioChunks = [];
             let isRecording = false;
-            let sendInterval = null;
-            let conversationData = {
-                transcript: [],
-                sentimentTrajectory: [],
-                topicDistribution: [],
-                painPoints: [],
-                budgetEstimation: {
-                    min: 0,
-                    max: 0,
-                    target: 0,
-                    current: 0
-                },
-                keyInsights: []
-            };
             let recordingStartTime = 0;
-            let lastProcessedTime = 0;
+            let timerInterval = null;
+            let audioBlob = null;
             
             // Charts
             let sentimentChart = null;
@@ -202,45 +193,57 @@
                 }
             });
             
+            // Process button
+            processButton.addEventListener('click', function() {
+                processConversation();
+            });
+            
             // Start recording
             async function startRecording() {
                 try {
                     // Request microphone access
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     
-                    // Reset conversation data
-                    resetConversationData();
+                    // Reset audio chunks
+                    audioChunks = [];
                     
                     // Set up media recorder
                     mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
                     
                     // Handle data available event
                     mediaRecorder.ondataavailable = function(event) {
                         audioChunks.push(event.data);
                     };
                     
-                    // Start recording
-                    mediaRecorder.start(1000); // Get data every second
-                    recordingStartTime = Date.now();
-                    lastProcessedTime = recordingStartTime;
-                    
-                    // Set up interval to send audio chunks every 5 seconds
-                    sendInterval = setInterval(() => {
-                        const currentChunks = [...audioChunks];
-                        audioChunks = [];
+                    // Handle recording stop
+                    mediaRecorder.onstop = function() {
+                        // Create audio blob
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         
-                        if (currentChunks.length > 0) {
-                            const audioBlob = new Blob(currentChunks, { type: 'audio/webm' });
-                            processAudioChunk(audioBlob);
-                        }
-                    }, 5000);
+                        // Stop all tracks
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        // Enable the process button
+                        processButton.disabled = false;
+                        processButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    };
+                    
+                    // Start recording
+                    mediaRecorder.start(1000); // Collect data every second
+                    
+                    // Start timer
+                    recordingStartTime = Date.now();
+                    timerInterval = setInterval(updateRecordingTime, 1000);
                     
                     // Update UI
                     isRecording = true;
                     recordButton.textContent = 'Stop Recording';
                     recordButton.classList.replace('bg-green-500', 'bg-red-500');
                     recordingStatus.classList.remove('hidden');
+                    
+                    // Reset transcript and charts
+                    transcriptContainer.innerHTML = '<p class="text-gray-500">Recording in progress...</p>';
+                    resetCharts();
                     
                 } catch (err) {
                     console.error('Error accessing microphone:', err);
@@ -254,38 +257,45 @@
                     // Stop media recorder
                     mediaRecorder.stop();
                     
-                    // Stop all tracks
-                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                    
-                    // Clear send interval
-                    clearInterval(sendInterval);
-                    
-                    // Process remaining audio chunks
-                    if (audioChunks.length > 0) {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        processAudioChunk(audioBlob, true);
-                        audioChunks = [];
-                    }
+                    // Clear timer
+                    clearInterval(timerInterval);
                     
                     // Update UI
                     isRecording = false;
-                    recordButton.textContent = 'Start Recording';
+                    recordButton.textContent = 'Start New Recording';
                     recordButton.classList.replace('bg-red-500', 'bg-green-500');
                     recordingStatus.classList.add('hidden');
+                    
+                    // Update transcript
+                    transcriptContainer.innerHTML = '<p class="text-gray-500">Recording complete. Click "Analyze Conversation" to process.</p>';
                 }
             }
             
-            // Process audio chunk
-            async function processAudioChunk(audioBlob, isFinal = false) {
+            // Update recording time display
+            function updateRecordingTime() {
+                const elapsedSeconds = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+                const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+                recordingTime.textContent = `${minutes}:${seconds}`;
+            }
+            
+            // Process the conversation
+            async function processConversation() {
+                if (!audioBlob) {
+                    alert('No recording available. Please record a conversation first.');
+                    return;
+                }
+                
                 // Show processing status
                 processingStatus.classList.remove('hidden');
+                processButton.disabled = true;
+                processButton.classList.add('opacity-50', 'cursor-not-allowed');
+                transcriptContainer.innerHTML = '<p class="text-gray-500">Processing audio...</p>';
                 
                 try {
-                    // Create form data with audio file
+                    // Create form data
                     const formData = new FormData();
                     formData.append('audio', audioBlob, 'recording.webm');
-                    formData.append('timestamp', Date.now() - recordingStartTime);
-                    formData.append('isFinal', isFinal);
                     
                     // Send to make.com
                     const makeWebhookUrl = 'https://hook.us2.make.com/pj83qpi1fbz2eo7jhe0x3c317b8vuhta';
@@ -304,79 +314,58 @@
                     const data = await response.json();
                     console.log('Analysis response:', data);
                     
-                    // Update the dashboard with new data
+                    // Update the dashboard
                     updateDashboard(data);
                     
                 } catch (error) {
                     console.error('Error processing audio:', error);
+                    transcriptContainer.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
                 } finally {
                     // Hide processing status
                     processingStatus.classList.add('hidden');
+                    processButton.disabled = false;
+                    processButton.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             }
             
-            // Update dashboard with new data
+            // Update dashboard with analysis data
             function updateDashboard(data) {
-                // Merge new data with existing conversation data
-                mergeConversationData(data);
-                
                 // Update transcript
-                updateTranscript();
+                updateTranscript(data.transcript || []);
                 
-                // Update charts
-                updateCharts();
-                
-                // Update budget estimation
-                updateBudgetEstimation();
-                
-                // Update key insights
-                updateKeyInsights();
-            }
-            
-            // Merge new conversation data
-            function mergeConversationData(data) {
-                // Merge transcript (check for new entries only)
-                if (data.transcript && Array.isArray(data.transcript)) {
-                    const existingIds = new Set(conversationData.transcript.map(item => item.timestamp));
-                    const newEntries = data.transcript.filter(item => !existingIds.has(item.timestamp));
-                    conversationData.transcript = [...conversationData.transcript, ...newEntries];
-                    // Sort transcript by timestamp
-                    conversationData.transcript.sort((a, b) => a.timestamp - b.timestamp);
-                }
-                
-                // Update sentiment trajectory
-                if (data.sentimentTrajectory && Array.isArray(data.sentimentTrajectory)) {
-                    conversationData.sentimentTrajectory = data.sentimentTrajectory;
-                }
+                // Update sentiment chart
+                updateSentimentChart(data.sentimentTrajectory || []);
                 
                 // Update topic distribution
-                if (data.topicDistribution && Array.isArray(data.topicDistribution)) {
-                    conversationData.topicDistribution = data.topicDistribution;
-                }
+                updateTopicChart(data.topicDistribution || []);
                 
                 // Update pain points
-                if (data.painPoints && Array.isArray(data.painPoints)) {
-                    conversationData.painPoints = data.painPoints;
-                }
+                updatePainPointsChart(data.painPoints || []);
                 
                 // Update budget estimation
-                if (data.budgetEstimation) {
-                    conversationData.budgetEstimation = data.budgetEstimation;
-                }
+                updateBudgetEstimation(data.budgetEstimation || {
+                    min: 0,
+                    max: 0,
+                    target: 0,
+                    current: 0
+                });
                 
                 // Update key insights
-                if (data.keyInsights && Array.isArray(data.keyInsights)) {
-                    conversationData.keyInsights = data.keyInsights;
-                }
+                updateKeyInsights(data.keyInsights || []);
             }
             
             // Update transcript display
-            function updateTranscript() {
-                // Clear transcript container first (or we could just append new entries)
+            function updateTranscript(transcript) {
+                if (!transcript || transcript.length === 0) {
+                    transcriptContainer.innerHTML = '<p class="text-gray-500">No transcript data available.</p>';
+                    return;
+                }
+                
+                // Clear container
                 transcriptContainer.innerHTML = '';
                 
                 // Create transcript entries
-                conversationData.transcript.forEach((entry, index) => {
+                transcript.forEach((entry, index) => {
                     const entryElement = document.createElement('div');
                     entryElement.className = 'mb-4';
                     
@@ -397,8 +386,8 @@
                     transcriptContainer.appendChild(entryElement);
                 });
                 
-                // Scroll to bottom
-                transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+                // Scroll to top
+                transcriptContainer.scrollTop = 0;
             }
             
             // Highlight keywords in text
@@ -414,8 +403,8 @@
             
             // Initialize charts
             function initializeCharts() {
-                // Sentiment Chart (Line Chart)
-                const sentimentCtx = document.getElementById('sentimentCanvas').getContext('2d');
+                // Sentiment Chart
+                const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
                 sentimentChart = new Chart(sentimentCtx, {
                     type: 'line',
                     data: {
@@ -459,8 +448,8 @@
                     }
                 });
                 
-                // Topic Distribution (Pie Chart)
-                const topicCtx = document.getElementById('topicCanvas').getContext('2d');
+                // Topic Distribution Chart
+                const topicCtx = document.getElementById('topicChart').getContext('2d');
                 topicChart = new Chart(topicCtx, {
                     type: 'pie',
                     data: {
@@ -476,8 +465,8 @@
                     }
                 });
                 
-                // Pain Points (Bar Chart)
-                const painPointsCtx = document.getElementById('painPointsCanvas').getContext('2d');
+                // Pain Points Chart
+                const painPointsCtx = document.getElementById('painPointsChart').getContext('2d');
                 painPointsChart = new Chart(painPointsCtx, {
                     type: 'bar',
                     data: {
@@ -501,34 +490,68 @@
                 });
             }
             
-            // Update charts with new data
-            function updateCharts() {
-                // Update Sentiment Chart
-                if (conversationData.sentimentTrajectory.length > 0) {
-                    sentimentChart.data.labels = conversationData.sentimentTrajectory.map(entry => Math.floor(entry.time / 1000));
-                    sentimentChart.data.datasets[0].data = conversationData.sentimentTrajectory.map(entry => entry.salesperson);
-                    sentimentChart.data.datasets[1].data = conversationData.sentimentTrajectory.map(entry => entry.customer);
-                    sentimentChart.update();
-                }
+            // Reset charts to empty state
+            function resetCharts() {
+                // Reset Sentiment Chart
+                sentimentChart.data.labels = [];
+                sentimentChart.data.datasets[0].data = [];
+                sentimentChart.data.datasets[1].data = [];
+                sentimentChart.update();
                 
-                // Update Topic Distribution Chart
-                if (conversationData.topicDistribution.length > 0) {
-                    topicChart.data.labels = conversationData.topicDistribution.map(entry => entry.name);
-                    topicChart.data.datasets[0].data = conversationData.topicDistribution.map(entry => entry.value);
-                    topicChart.update();
-                }
+                // Reset Topic Chart
+                topicChart.data.labels = [];
+                topicChart.data.datasets[0].data = [];
+                topicChart.update();
                 
-                // Update Pain Points Chart
-                if (conversationData.painPoints.length > 0) {
-                    painPointsChart.data.labels = conversationData.painPoints.map(entry => entry.category);
-                    painPointsChart.data.datasets[0].data = conversationData.painPoints.map(entry => entry.score);
-                    painPointsChart.update();
-                }
+                // Reset Pain Points Chart
+                painPointsChart.data.labels = [];
+                painPointsChart.data.datasets[0].data = [];
+                painPointsChart.update();
+                
+                // Reset Budget Estimation
+                document.getElementById('budgetTarget').textContent = '$0';
+                document.getElementById('budgetMin').textContent = '$0';
+                document.getElementById('budgetMax').textContent = '$0';
+                document.getElementById('budgetCurrent').textContent = 'Current: $0';
+                document.getElementById('budgetProgressBar').style.width = '0%';
+                
+                // Reset Key Insights
+                document.getElementById('keyInsights').innerHTML = '<li class="text-gray-500">Insights will appear here after analysis.</li>';
+            }
+            
+            // Update sentiment chart
+            function updateSentimentChart(sentimentData) {
+                if (!sentimentData || sentimentData.length === 0) return;
+                
+                sentimentChart.data.labels = sentimentData.map(entry => Math.floor(entry.time / 1000));
+                sentimentChart.data.datasets[0].data = sentimentData.map(entry => entry.salesperson);
+                sentimentChart.data.datasets[1].data = sentimentData.map(entry => entry.customer);
+                sentimentChart.update();
+            }
+            
+            // Update topic distribution chart
+            function updateTopicChart(topicData) {
+                if (!topicData || topicData.length === 0) return;
+                
+                topicChart.data.labels = topicData.map(entry => entry.name);
+                topicChart.data.datasets[0].data = topicData.map(entry => entry.value);
+                topicChart.update();
+            }
+            
+            // Update pain points chart
+            function updatePainPointsChart(painPointsData) {
+                if (!painPointsData || painPointsData.length === 0) return;
+                
+                painPointsChart.data.labels = painPointsData.map(entry => entry.category);
+                painPointsChart.data.datasets[0].data = painPointsData.map(entry => entry.score);
+                painPointsChart.update();
             }
             
             // Update budget estimation display
-            function updateBudgetEstimation() {
-                const { min, max, target, current } = conversationData.budgetEstimation;
+            function updateBudgetEstimation(budgetData) {
+                if (!budgetData) return;
+                
+                const { min, max, target, current } = budgetData;
                 
                 document.getElementById('budgetTarget').textContent = `$${target.toLocaleString()}`;
                 document.getElementById('budgetMin').textContent = `$${min.toLocaleString()}`;
@@ -541,12 +564,12 @@
             }
             
             // Update key insights
-            function updateKeyInsights() {
+            function updateKeyInsights(insights) {
                 const keyInsightsContainer = document.getElementById('keyInsights');
                 keyInsightsContainer.innerHTML = '';
                 
-                if (conversationData.keyInsights.length > 0) {
-                    conversationData.keyInsights.forEach(insight => {
+                if (insights && insights.length > 0) {
+                    insights.forEach(insight => {
                         const insightElement = document.createElement('li');
                         insightElement.className = 'text-gray-700';
                         insightElement.textContent = insight;
@@ -555,32 +578,9 @@
                 } else {
                     const placeholderElement = document.createElement('li');
                     placeholderElement.className = 'text-gray-500';
-                    placeholderElement.textContent = 'Insights will appear here once enough conversation data is gathered.';
+                    placeholderElement.textContent = 'No insights available.';
                     keyInsightsContainer.appendChild(placeholderElement);
                 }
-            }
-            
-            // Reset conversation data
-            function resetConversationData() {
-                conversationData = {
-                    transcript: [],
-                    sentimentTrajectory: [],
-                    topicDistribution: [],
-                    painPoints: [],
-                    budgetEstimation: {
-                        min: 0,
-                        max: 0,
-                        target: 0,
-                        current: 0
-                    },
-                    keyInsights: []
-                };
-                
-                // Reset UI
-                updateTranscript();
-                updateCharts();
-                updateBudgetEstimation();
-                updateKeyInsights();
             }
         });
     </script>
