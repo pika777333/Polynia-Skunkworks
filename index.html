@@ -213,8 +213,20 @@
                 visualizerCanvas = document.getElementById('audioVisualizer');
                 visualizerCanvasCtx = visualizerCanvas.getContext('2d');
                 
+                // Set canvas dimensions to match its container
+                resizeVisualizer();
+                
                 // Start drawing
                 drawVisualizer();
+            }
+            
+            // Resize visualizer canvas to match its container
+            function resizeVisualizer() {
+                if (visualizerCanvas) {
+                    const container = visualizerCanvas.parentElement;
+                    visualizerCanvas.width = container.clientWidth;
+                    visualizerCanvas.height = container.clientHeight;
+                }
             }
             
             // Draw visualizer
@@ -287,6 +299,13 @@
             // Initialize charts
             initializeCharts();
             
+            // Add window resize event listener for visualizer
+            window.addEventListener('resize', function() {
+                if (isRecording && visualizerCanvas) {
+                    resizeVisualizer();
+                }
+            });
+            
             // Start/stop recording button
             recordButton.addEventListener('click', function() {
                 if (isRecording) {
@@ -337,11 +356,13 @@
                     // Start recording
                     mediaRecorder.start(1000); // Collect data every second
                     
-                    // Initialize audio visualizer
-                    initAudioVisualizer(stream);
-                    
-                    // Show visualizer container
+                    // Show visualizer container first
                     document.getElementById('visualizerContainer').classList.remove('hidden');
+                    
+                    // Initialize audio visualizer after container is visible
+                    setTimeout(() => {
+                        initAudioVisualizer(stream);
+                    }, 100); // Small delay to ensure container is rendered
                     
                     // Start timer
                     recordingStartTime = Date.now();
