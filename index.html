@@ -143,6 +143,16 @@
                     </div>
                 </div>
                 
+                <!-- Audio Visualizer -->
+                <div id="visualizerContainer" class="col-span-12 bg-white rounded-lg shadow hidden">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Audio Visualizer</h2>
+                    </div>
+                    <div class="p-4" style="height: 150px;">
+                        <canvas id="audioVisualizer" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
                 <!-- Key Insights -->
                 <div class="col-span-12 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
@@ -175,6 +185,14 @@
             let recordingStartTime = 0;
             let timerInterval = null;
             let audioBlob = null;
+            
+            // Audio visualizer variables
+            let audioContext = null;
+            let analyser = null;
+            let audioSource = null;
+            let visualizerCanvas = null;
+            let visualizerCanvasCtx = null;
+            let animationId = null;
             
             // Charts
             let sentimentChart = null;
@@ -223,6 +241,9 @@
                         // Stop all tracks
                         stream.getTracks().forEach(track => track.stop());
                         
+                        // Stop visualizer
+                        stopVisualizer();
+                        
                         // Enable the process button
                         processButton.disabled = false;
                         processButton.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -230,6 +251,9 @@
                     
                     // Start recording
                     mediaRecorder.start(1000); // Collect data every second
+                    
+                    // Initialize audio visualizer
+                    initAudioVisualizer(stream);
                     
                     // Start timer
                     recordingStartTime = Date.now();
@@ -265,6 +289,9 @@
                     recordButton.textContent = 'Start New Recording';
                     recordButton.classList.replace('bg-red-500', 'bg-green-500');
                     recordingStatus.classList.add('hidden');
+                    
+                    // Hide visualizer
+                    document.getElementById('visualizerContainer').classList.add('hidden');
                     
                     // Update transcript
                     transcriptContainer.innerHTML = '<p class="text-gray-500">Recording complete. Click "Analyze Conversation" to process.</p>';
@@ -588,18 +615,28 @@
             
             // Stop visualizer
             function stopVisualizer() {
-                if (animationId) {
+                if (typeof animationId !== 'undefined' && animationId) {
                     cancelAnimationFrame(animationId);
                     animationId = null;
                 }
                 
                 if (audioContext) {
-                    if (audioContext.state !== 'closed') {
-                        if (audioSource) {
-                            audioSource.disconnect();
-                        }
+                    if (audioSource) {
+                        audioSource.disconnect();
+                    }
+                    
+                    // Close audio context if supported
+                    if (audioContext.state !== 'closed' && audioContext.close) {
+                        audioContext.close();
                     }
                 }
+                
+                // Reset variables
+                audioContext = null;
+                analyser = null;
+                audioSource = null;
+                visualizerCanvas = null;
+                visualizerCanvasCtx = null;
             }
             
             // Update sentiment chart
