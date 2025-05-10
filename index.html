@@ -74,6 +74,16 @@
         <!-- Main Content -->
         <main class="flex-1 p-6 overflow-auto">
             <div class="grid grid-cols-12 gap-6">
+                <!-- Audio Visualizer -->
+                <div id="visualizerContainer" class="col-span-12 bg-white rounded-lg shadow mb-6">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Audio Visualizer</h2>
+                    </div>
+                    <div class="p-4" style="height: 180px;">
+                        <canvas id="audioVisualizer" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
                 <!-- Transcript Panel -->
                 <div class="col-span-6 bg-white rounded-lg shadow overflow-hidden">
                     <div class="p-4 border-b border-gray-200">
@@ -143,15 +153,7 @@
                     </div>
                 </div>
                 
-                <!-- Audio Visualizer -->
-                <div id="visualizerContainer" class="col-span-12 bg-white rounded-lg shadow hidden">
-                    <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Audio Visualizer</h2>
-                    </div>
-                    <div class="p-4" style="height: 150px;">
-                        <canvas id="audioVisualizer" class="w-full h-full"></canvas>
-                    </div>
-                </div>
+
                 
                 <!-- Key Insights -->
                 <div class="col-span-12 bg-white rounded-lg shadow">
@@ -356,8 +358,8 @@
                     // Start recording
                     mediaRecorder.start(1000); // Collect data every second
                     
-                    // Show visualizer container first
-                    document.getElementById('visualizerContainer').classList.remove('hidden');
+                    // Show visualizer container
+                    document.getElementById('visualizerContainer').style.display = 'block';
                     
                     // Initialize audio visualizer after container is visible
                     setTimeout(() => {
@@ -400,7 +402,7 @@
                     recordingStatus.classList.add('hidden');
                     
                     // Hide visualizer
-                    document.getElementById('visualizerContainer').classList.add('hidden');
+                    document.getElementById('visualizerContainer').style.display = 'none';
                     
                     // Update transcript
                     transcriptContainer.innerHTML = '<p class="text-gray-500">Recording complete. Click "Analyze Conversation" to process.</p>';
