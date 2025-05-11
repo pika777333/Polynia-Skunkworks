@@ -46,7 +46,7 @@
         <!-- Header -->
         <header class="bg-white shadow p-4">
             <div class="flex justify-between items-center">
-                <h1 class="text-xl font-bold text-gray-800">AI Sales Data Analyst Dashboard</h1>
+                <h1 class="text-xl font-bold text-gray-800">Founder Pitch Analyzer Dashboard</h1>
                 <div class="flex items-center space-x-4">
                     <button 
                         id="recordButton"
@@ -62,7 +62,7 @@
                         class="px-4 py-2 rounded-md font-medium bg-blue-500 text-white opacity-50 cursor-not-allowed"
                         disabled
                     >
-                        Analyze Conversation
+                        Analyze Pitch
                     </button>
                     <div id="processingStatus" class="hidden">
                         <span class="spinner"></span> Processing...
@@ -83,67 +83,67 @@
                 <!-- Transcript Panel -->
                 <div class="col-span-6 bg-white rounded-lg shadow overflow-hidden">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Conversation Transcript</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Pitch Transcript</h2>
                     </div>
                     <div id="transcript" class="p-4 transcript-container">
                         <p class="text-gray-500">Transcript will appear here after recording and analysis.</p>
                     </div>
                 </div>
                 
-                <!-- Sentiment Chart -->
+                <!-- Pitch Resonance Score -->
                 <div class="col-span-6 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Sentiment Trajectory</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Pitch Resonance Score</h2>
                     </div>
                     <div class="p-4" style="height: 300px;">
-                        <canvas id="sentimentChart"></canvas>
+                        <canvas id="resonanceChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Topic Distribution -->
+                <!-- Clarity vs Confusion Index -->
                 <div class="col-span-4 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Topic Distribution</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Clarity vs Confusion Index</h2>
                     </div>
                     <div class="p-4" style="height: 250px;">
-                        <canvas id="topicChart"></canvas>
+                        <canvas id="clarityChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Pain Points -->
+                <!-- Objection Handling Effectiveness -->
                 <div class="col-span-4 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Pain Points</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Objection Handling Effectiveness</h2>
                     </div>
                     <div class="p-4" style="height: 250px;">
-                        <canvas id="painPointsChart"></canvas>
+                        <canvas id="objectionChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Budget Estimation -->
+                <!-- Value Communication Score -->
                 <div class="col-span-4 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Budget Estimation</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Value Communication Score</h2>
                     </div>
                     <div class="p-4" style="height: 250px;">
                         <div class="flex flex-col items-center justify-center h-full">
-                            <div id="budgetTarget" class="text-3xl font-bold text-gray-700">
-                                $0
+                            <div id="valueTarget" class="text-3xl font-bold text-gray-700">
+                                0
                             </div>
                             <div class="text-sm text-gray-500 mt-2">
-                                Estimated Target Budget
+                                Value Communication Score
                             </div>
                             <div class="w-full mt-6 bg-gray-200 rounded-full h-4">
                                 <div 
-                                    id="budgetProgressBar"
+                                    id="valueProgressBar"
                                     class="bg-blue-600 h-4 rounded-full" 
                                     style="width: 0%"
                                 ></div>
                             </div>
                             <div class="w-full flex justify-between text-xs mt-1">
-                                <span id="budgetMin">$0</span>
-                                <span id="budgetCurrent">Current: $0</span>
-                                <span id="budgetMax">$0</span>
+                                <span>Poor</span>
+                                <span id="valueScore">Score: 0/100</span>
+                                <span>Excellent</span>
                             </div>
                         </div>
                     </div>
@@ -151,8 +151,18 @@
                 
 
                 
+                <!-- Shark Interest Profile -->
+                <div class="col-span-6 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Shark Interest Profile</h2>
+                    </div>
+                    <div class="p-4" style="height: 300px;">
+                        <canvas id="sharkInterestChart"></canvas>
+                    </div>
+                </div>
+                
                 <!-- Key Insights -->
-                <div class="col-span-12 bg-white rounded-lg shadow">
+                <div class="col-span-6 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-700">Key Insights</h2>
                     </div>
@@ -467,21 +477,27 @@
                 // Update transcript
                 updateTranscript(data.transcript || []);
                 
-                // Update sentiment chart
-                updateSentimentChart(data.sentimentTrajectory || []);
+                // Update pitch resonance chart
+                updateResonanceChart(data.pitchResonance || []);
                 
-                // Update topic distribution
-                updateTopicChart(data.topicDistribution || []);
+                // Update clarity vs confusion index
+                updateClarityChart(data.clarityConfusion || {
+                    clarity: [0, 0, 0, 0],
+                    confusion: [0, 0, 0, 0]
+                });
                 
-                // Update pain points
-                updatePainPointsChart(data.painPoints || []);
+                // Update objection handling effectiveness
+                updateObjectionChart(data.objectionHandling || []);
                 
-                // Update budget estimation
-                updateBudgetEstimation(data.budgetEstimation || {
-                    min: 0,
-                    max: 0,
-                    target: 0,
-                    current: 0
+                // Update shark interest profile
+                updateSharkInterestChart(data.sharkInterest || {
+                    sharks: [0, 0, 0, 0, 0, 0]
+                });
+                
+                // Update value communication score
+                updateValueCommunication(data.valueCommunication || {
+                    score: 0,
+                    max: 100
                 });
                 
                 // Update key insights
@@ -526,7 +542,7 @@
             
             // Highlight keywords in text
             function highlightKeywords(text) {
-                const keywords = ['budget', 'concerned', 'reliability', 'safety', 'features', 'test drive', 'price', 'cost', 'warranty', 'financing', 'payments'];
+                const keywords = ['valuation', 'equity', 'sales', 'revenue', 'profit', 'margin', 'market', 'competition', 'patent', 'proprietary', 'scaling', 'investment', 'ROI', 'business model', 'prototype', 'customer acquisition'];
                 
                 // Create a regular expression to match all keywords (case insensitive)
                 const regex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
@@ -537,22 +553,22 @@
             
             // Initialize charts
             function initializeCharts() {
-                // Sentiment Chart
-                const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
-                sentimentChart = new Chart(sentimentCtx, {
+                // Pitch Resonance Chart
+                const resonanceCtx = document.getElementById('resonanceChart').getContext('2d');
+                sentimentChart = new Chart(resonanceCtx, {
                     type: 'line',
                     data: {
                         labels: [],
                         datasets: [
                             {
-                                label: 'Salesperson',
+                                label: 'Pitch Points',
                                 data: [],
                                 borderColor: '#0088FE',
                                 tension: 0.1,
                                 fill: false
                             },
                             {
-                                label: 'Customer',
+                                label: 'Shark Engagement',
                                 data: [],
                                 borderColor: '#00C49F',
                                 tension: 0.1,
@@ -565,50 +581,64 @@
                         maintainAspectRatio: false,
                         scales: {
                             y: {
-                                min: -1,
-                                max: 1,
+                                min: 0,
+                                max: 10,
                                 title: {
                                     display: true,
-                                    text: 'Sentiment'
+                                    text: 'Engagement Level'
                                 }
                             },
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'Time (seconds)'
+                                    text: 'Pitch Timeline (seconds)'
                                 }
                             }
                         }
                     }
                 });
                 
-                // Topic Distribution Chart
-                const topicCtx = document.getElementById('topicChart').getContext('2d');
-                topicChart = new Chart(topicCtx, {
-                    type: 'pie',
+                // Clarity vs Confusion Chart
+                const clarityCtx = document.getElementById('clarityChart').getContext('2d');
+                topicChart = new Chart(clarityCtx, {
+                    type: 'bar',
                     data: {
-                        labels: [],
-                        datasets: [{
-                            data: [],
-                            backgroundColor: ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
-                        }]
+                        labels: ['Business Model', 'Product', 'Market', 'Ask'],
+                        datasets: [
+                            {
+                                label: 'Clarity Score',
+                                data: [],
+                                backgroundColor: '#0088FE'
+                            },
+                            {
+                                label: 'Confusion Triggers',
+                                data: [],
+                                backgroundColor: '#FF8042'
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 10
+                            }
+                        }
                     }
                 });
                 
-                // Pain Points Chart
-                const painPointsCtx = document.getElementById('painPointsChart').getContext('2d');
-                painPointsChart = new Chart(painPointsCtx, {
+                // Objection Handling Chart
+                const objectionCtx = document.getElementById('objectionChart').getContext('2d');
+                painPointsChart = new Chart(objectionCtx, {
                     type: 'bar',
                     data: {
                         labels: [],
                         datasets: [{
-                            label: 'Score',
+                            label: 'Effectiveness Score',
                             data: [],
-                            backgroundColor: '#FF8042'
+                            backgroundColor: '#00C49F'
                         }]
                     },
                     options: {
@@ -617,7 +647,37 @@
                         indexAxis: 'y',
                         scales: {
                             x: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                max: 10
+                            }
+                        }
+                    }
+                });
+                
+                // Shark Interest Profile Chart
+                const sharkInterestCtx = document.getElementById('sharkInterestChart').getContext('2d');
+                sharkInterestChart = new Chart(sharkInterestCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Mark', 'Daymond', 'Lori', 'Kevin', 'Robert', 'Guest Shark'],
+                        datasets: [{
+                            label: 'Interest Level',
+                            data: [0, 0, 0, 0, 0, 0],
+                            backgroundColor: 'rgba(0, 136, 254, 0.2)',
+                            borderColor: '#0088FE',
+                            pointBackgroundColor: '#0088FE'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                min: 0,
+                                max: 10,
+                                ticks: {
+                                    stepSize: 2
+                                }
                             }
                         }
                     }
@@ -631,28 +691,32 @@
                     cancelAnimationFrame(animationId);
                     animationId = null;
                 }
-                // Reset Sentiment Chart
+                // Reset Pitch Resonance Chart
                 sentimentChart.data.labels = [];
                 sentimentChart.data.datasets[0].data = [];
                 sentimentChart.data.datasets[1].data = [];
                 sentimentChart.update();
                 
-                // Reset Topic Chart
-                topicChart.data.labels = [];
-                topicChart.data.datasets[0].data = [];
+                // Reset Clarity Chart
+                topicChart.data.datasets[0].data = [0, 0, 0, 0];
+                topicChart.data.datasets[1].data = [0, 0, 0, 0];
                 topicChart.update();
                 
-                // Reset Pain Points Chart
+                // Reset Objection Chart
                 painPointsChart.data.labels = [];
                 painPointsChart.data.datasets[0].data = [];
                 painPointsChart.update();
                 
-                // Reset Budget Estimation
-                document.getElementById('budgetTarget').textContent = '$0';
-                document.getElementById('budgetMin').textContent = '$0';
-                document.getElementById('budgetMax').textContent = '$0';
-                document.getElementById('budgetCurrent').textContent = 'Current: $0';
-                document.getElementById('budgetProgressBar').style.width = '0%';
+                // Reset Shark Interest Chart
+                if (sharkInterestChart) {
+                    sharkInterestChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0];
+                    sharkInterestChart.update();
+                }
+                
+                // Reset Value Communication Score
+                document.getElementById('valueTarget').textContent = '0';
+                document.getElementById('valueScore').textContent = 'Score: 0/100';
+                document.getElementById('valueProgressBar').style.width = '0%';
                 
                 // Reset Key Insights
                 document.getElementById('keyInsights').innerHTML = '<li class="text-gray-500">Insights will appear here after analysis.</li>';
@@ -746,48 +810,54 @@
                 visualizerCanvasCtx = null;
             }
             
-            // Update sentiment chart
-            function updateSentimentChart(sentimentData) {
-                if (!sentimentData || sentimentData.length === 0) return;
+            // Update pitch resonance chart
+            function updateResonanceChart(resonanceData) {
+                if (!resonanceData || resonanceData.length === 0) return;
                 
-                sentimentChart.data.labels = sentimentData.map(entry => Math.floor(entry.time / 1000));
-                sentimentChart.data.datasets[0].data = sentimentData.map(entry => entry.salesperson);
-                sentimentChart.data.datasets[1].data = sentimentData.map(entry => entry.customer);
+                sentimentChart.data.labels = resonanceData.map(entry => Math.floor(entry.time / 1000));
+                sentimentChart.data.datasets[0].data = resonanceData.map(entry => entry.pitchPoints);
+                sentimentChart.data.datasets[1].data = resonanceData.map(entry => entry.sharkEngagement);
                 sentimentChart.update();
             }
             
-            // Update topic distribution chart
-            function updateTopicChart(topicData) {
-                if (!topicData || topicData.length === 0) return;
+            // Update clarity vs confusion chart
+            function updateClarityChart(clarityData) {
+                if (!clarityData) return;
                 
-                topicChart.data.labels = topicData.map(entry => entry.name);
-                topicChart.data.datasets[0].data = topicData.map(entry => entry.value);
+                topicChart.data.datasets[0].data = clarityData.clarity;
+                topicChart.data.datasets[1].data = clarityData.confusion;
                 topicChart.update();
             }
             
-            // Update pain points chart
-            function updatePainPointsChart(painPointsData) {
-                if (!painPointsData || painPointsData.length === 0) return;
+            // Update objection handling chart
+            function updateObjectionChart(objectionData) {
+                if (!objectionData || objectionData.length === 0) return;
                 
-                painPointsChart.data.labels = painPointsData.map(entry => entry.category);
-                painPointsChart.data.datasets[0].data = painPointsData.map(entry => entry.score);
+                painPointsChart.data.labels = objectionData.map(entry => entry.objection);
+                painPointsChart.data.datasets[0].data = objectionData.map(entry => entry.effectiveness);
                 painPointsChart.update();
             }
             
-            // Update budget estimation display
-            function updateBudgetEstimation(budgetData) {
-                if (!budgetData) return;
+            // Update shark interest profile chart
+            function updateSharkInterestChart(sharkData) {
+                if (!sharkData || !sharkData.sharks) return;
                 
-                const { min, max, target, current } = budgetData;
+                sharkInterestChart.data.datasets[0].data = sharkData.sharks;
+                sharkInterestChart.update();
+            }
+            
+            // Update value communication display
+            function updateValueCommunication(valueData) {
+                if (!valueData) return;
                 
-                document.getElementById('budgetTarget').textContent = `$${target.toLocaleString()}`;
-                document.getElementById('budgetMin').textContent = `$${min.toLocaleString()}`;
-                document.getElementById('budgetMax').textContent = `$${max.toLocaleString()}`;
-                document.getElementById('budgetCurrent').textContent = `Current: $${current.toLocaleString()}`;
+                const { score, max } = valueData;
+                
+                document.getElementById('valueTarget').textContent = score;
+                document.getElementById('valueScore').textContent = `Score: ${score}/${max}`;
                 
                 // Calculate percentage for progress bar
-                const percentage = max > 0 ? (current / max * 100) : 0;
-                document.getElementById('budgetProgressBar').style.width = `${percentage}%`;
+                const percentage = max > 0 ? (score / max * 100) : 0;
+                document.getElementById('valueProgressBar').style.width = `${percentage}%`;
             }
             
             // Update key insights
