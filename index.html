@@ -46,7 +46,7 @@
         <!-- Header -->
         <header class="bg-white shadow p-4">
             <div class="flex justify-between items-center">
-                <h1 class="text-xl font-bold text-gray-800">Founder Pitch Analyzer Dashboard</h1>
+                <h1 class="text-xl font-bold text-gray-800">AI Sales Data Analyst Dashboard</h1>
                 <div class="flex items-center space-x-4">
                     <button 
                         id="recordButton"
@@ -62,17 +62,11 @@
                         class="px-4 py-2 rounded-md font-medium bg-blue-500 text-white opacity-50 cursor-not-allowed"
                         disabled
                     >
-                        Analyze Pitch
+                        Analyze Conversation
                     </button>
                     <div id="processingStatus" class="hidden">
                         <span class="spinner"></span> Processing...
                     </div>
-                </div>
-            </div>
-            <!-- Inline Audio Visualizer - Only visible during recording -->
-            <div id="visualizerContainer" class="mt-4 bg-white rounded-lg shadow hidden">
-                <div class="p-2" style="height: 80px;">
-                    <canvas id="audioVisualizer" class="w-full h-full"></canvas>
                 </div>
             </div>
         </header>
@@ -83,86 +77,74 @@
                 <!-- Transcript Panel -->
                 <div class="col-span-6 bg-white rounded-lg shadow overflow-hidden">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Pitch Transcript</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Conversation Transcript</h2>
                     </div>
                     <div id="transcript" class="p-4 transcript-container">
                         <p class="text-gray-500">Transcript will appear here after recording and analysis.</p>
                     </div>
                 </div>
                 
-                <!-- Pitch Resonance Score -->
+                <!-- Sentiment Chart -->
                 <div class="col-span-6 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Pitch Resonance Score</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Sentiment Trajectory</h2>
                     </div>
                     <div class="p-4" style="height: 300px;">
-                        <canvas id="resonanceChart"></canvas>
+                        <canvas id="sentimentChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Clarity vs Confusion Index -->
+                <!-- Topic Distribution -->
                 <div class="col-span-4 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Clarity vs Confusion Index</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Topic Distribution</h2>
                     </div>
                     <div class="p-4" style="height: 250px;">
-                        <canvas id="clarityChart"></canvas>
+                        <canvas id="topicChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Objection Handling Effectiveness -->
+                <!-- Pain Points -->
                 <div class="col-span-4 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Objection Handling Effectiveness</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Pain Points</h2>
                     </div>
                     <div class="p-4" style="height: 250px;">
-                        <canvas id="objectionChart"></canvas>
+                        <canvas id="painPointsChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Value Communication Score -->
+                <!-- Budget Estimation -->
                 <div class="col-span-4 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Value Communication Score</h2>
+                        <h2 class="text-lg font-semibold text-gray-700">Budget Estimation</h2>
                     </div>
                     <div class="p-4" style="height: 250px;">
                         <div class="flex flex-col items-center justify-center h-full">
-                            <div id="valueTarget" class="text-3xl font-bold text-gray-700">
-                                0
+                            <div id="budgetTarget" class="text-3xl font-bold text-gray-700">
+                                $0
                             </div>
                             <div class="text-sm text-gray-500 mt-2">
-                                Value Communication Score
+                                Estimated Target Budget
                             </div>
                             <div class="w-full mt-6 bg-gray-200 rounded-full h-4">
                                 <div 
-                                    id="valueProgressBar"
+                                    id="budgetProgressBar"
                                     class="bg-blue-600 h-4 rounded-full" 
                                     style="width: 0%"
                                 ></div>
                             </div>
                             <div class="w-full flex justify-between text-xs mt-1">
-                                <span>Poor</span>
-                                <span id="valueScore">Score: 0/100</span>
-                                <span>Excellent</span>
+                                <span id="budgetMin">$0</span>
+                                <span id="budgetCurrent">Current: $0</span>
+                                <span id="budgetMax">$0</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-
-                
-                <!-- Shark Interest Profile -->
-                <div class="col-span-6 bg-white rounded-lg shadow">
-                    <div class="p-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-700">Shark Interest Profile</h2>
-                    </div>
-                    <div class="p-4" style="height: 300px;">
-                        <canvas id="sharkInterestChart"></canvas>
-                    </div>
-                </div>
-                
                 <!-- Key Insights -->
-                <div class="col-span-6 bg-white rounded-lg shadow">
+                <div class="col-span-12 bg-white rounded-lg shadow">
                     <div class="p-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-700">Key Insights</h2>
                     </div>
@@ -194,111 +176,6 @@
             let timerInterval = null;
             let audioBlob = null;
             
-            // Audio visualizer variables
-            let audioContext = null;
-            let analyser = null;
-            let audioSource = null;
-            let visualizerCanvas = null;
-            let visualizerCanvasCtx = null;
-            let animationId = null;
-            
-            // Initialize audio visualizer
-            function initAudioVisualizer(stream) {
-                // Create audio context
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Create analyser node
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                
-                // Connect audio source to analyser
-                audioSource = audioContext.createMediaStreamSource(stream);
-                audioSource.connect(analyser);
-                
-                // Set up canvas
-                visualizerCanvas = document.getElementById('audioVisualizer');
-                visualizerCanvasCtx = visualizerCanvas.getContext('2d');
-                
-                // Set canvas dimensions to match its container
-                resizeVisualizer();
-                
-                // Start drawing
-                drawVisualizer();
-            }
-            
-            // Resize visualizer canvas to match its container
-            function resizeVisualizer() {
-                if (visualizerCanvas) {
-                    const container = visualizerCanvas.parentElement;
-                    visualizerCanvas.width = container.clientWidth;
-                    visualizerCanvas.height = container.clientHeight;
-                }
-            }
-            
-            // Draw visualizer
-            function drawVisualizer() {
-                // Get canvas dimensions
-                const width = visualizerCanvas.width;
-                const height = visualizerCanvas.height;
-                
-                // Set up animation frame
-                animationId = requestAnimationFrame(drawVisualizer);
-                
-                // Get frequency data
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                analyser.getByteFrequencyData(dataArray);
-                
-                // Clear canvas
-                visualizerCanvasCtx.clearRect(0, 0, width, height);
-                
-                // Set bar width based on canvas and buffer length
-                const barWidth = (width / bufferLength) * 2.5;
-                let barHeight;
-                let x = 0;
-                
-                // Draw bars
-                for (let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i] / 2;
-                    
-                    // Create gradient
-                    const gradient = visualizerCanvasCtx.createLinearGradient(0, 0, 0, height);
-                    gradient.addColorStop(0, '#3498db');
-                    gradient.addColorStop(1, '#9b59b6');
-                    
-                    visualizerCanvasCtx.fillStyle = gradient;
-                    visualizerCanvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
-                    
-                    x += barWidth + 1;
-                }
-            }
-            
-            // Stop visualizer
-            function stopVisualizer() {
-                if (animationId) {
-                    cancelAnimationFrame(animationId);
-                    animationId = null;
-                }
-                
-                if (audioSource) {
-                    audioSource.disconnect();
-                    audioSource = null;
-                }
-                
-                if (audioContext) {
-                    if (audioContext.state !== 'closed') {
-                        audioContext.close().catch(err => console.error('Error closing audio context:', err));
-                    }
-                    audioContext = null;
-                }
-                
-                if (visualizerCanvas && visualizerCanvasCtx) {
-                    visualizerCanvasCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
-                }
-            }
-            
             // Charts
             let sentimentChart = null;
             let topicChart = null;
@@ -306,13 +183,6 @@
             
             // Initialize charts
             initializeCharts();
-            
-            // Add window resize event listener for visualizer
-            window.addEventListener('resize', function() {
-                if (isRecording && visualizerCanvas) {
-                    resizeVisualizer();
-                }
-            });
             
             // Start/stop recording button
             recordButton.addEventListener('click', function() {
@@ -353,9 +223,6 @@
                         // Stop all tracks
                         stream.getTracks().forEach(track => track.stop());
                         
-                        // Stop visualizer
-                        stopVisualizer();
-                        
                         // Enable the process button
                         processButton.disabled = false;
                         processButton.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -363,14 +230,6 @@
                     
                     // Start recording
                     mediaRecorder.start(1000); // Collect data every second
-                    
-                    // Show inline visualizer container
-                    document.getElementById('visualizerContainer').classList.remove('hidden');
-                    
-                    // Initialize audio visualizer after container is visible
-                    setTimeout(() => {
-                        initAudioVisualizer(stream);
-                    }, 100); // Small delay to ensure container is rendered
                     
                     // Start timer
                     recordingStartTime = Date.now();
@@ -407,9 +266,6 @@
                     recordButton.classList.replace('bg-red-500', 'bg-green-500');
                     recordingStatus.classList.add('hidden');
                     
-                    // Hide visualizer
-                    document.getElementById('visualizerContainer').classList.add('hidden');
-                    
                     // Update transcript
                     transcriptContainer.innerHTML = '<p class="text-gray-500">Recording complete. Click "Analyze Conversation" to process.</p>';
                 }
@@ -442,7 +298,7 @@
                     formData.append('audio', audioBlob, 'recording.webm');
                     
                     // Send to make.com
-                    const makeWebhookUrl = 'https://hook.us2.make.com/pj83qpi1fbz2eo7jhe0x3c317b8vuhta';
+                    const makeWebhookUrl = 'https://hook.eu1.make.com/YOUR_WEBHOOK_ID';
                     
                     const response = await fetch(makeWebhookUrl, {
                         method: 'POST',
@@ -477,27 +333,21 @@
                 // Update transcript
                 updateTranscript(data.transcript || []);
                 
-                // Update pitch resonance chart
-                updateResonanceChart(data.pitchResonance || []);
+                // Update sentiment chart
+                updateSentimentChart(data.sentimentTrajectory || []);
                 
-                // Update clarity vs confusion index
-                updateClarityChart(data.clarityConfusion || {
-                    clarity: [0, 0, 0, 0],
-                    confusion: [0, 0, 0, 0]
-                });
+                // Update topic distribution
+                updateTopicChart(data.topicDistribution || []);
                 
-                // Update objection handling effectiveness
-                updateObjectionChart(data.objectionHandling || []);
+                // Update pain points
+                updatePainPointsChart(data.painPoints || []);
                 
-                // Update shark interest profile
-                updateSharkInterestChart(data.sharkInterest || {
-                    sharks: [0, 0, 0, 0, 0, 0]
-                });
-                
-                // Update value communication score
-                updateValueCommunication(data.valueCommunication || {
-                    score: 0,
-                    max: 100
+                // Update budget estimation
+                updateBudgetEstimation(data.budgetEstimation || {
+                    min: 0,
+                    max: 0,
+                    target: 0,
+                    current: 0
                 });
                 
                 // Update key insights
@@ -542,7 +392,7 @@
             
             // Highlight keywords in text
             function highlightKeywords(text) {
-                const keywords = ['valuation', 'equity', 'sales', 'revenue', 'profit', 'margin', 'market', 'competition', 'patent', 'proprietary', 'scaling', 'investment', 'ROI', 'business model', 'prototype', 'customer acquisition'];
+                const keywords = ['budget', 'concerned', 'reliability', 'safety', 'features', 'test drive', 'price', 'cost', 'warranty', 'financing', 'payments'];
                 
                 // Create a regular expression to match all keywords (case insensitive)
                 const regex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
@@ -553,22 +403,22 @@
             
             // Initialize charts
             function initializeCharts() {
-                // Pitch Resonance Chart
-                const resonanceCtx = document.getElementById('resonanceChart').getContext('2d');
-                sentimentChart = new Chart(resonanceCtx, {
+                // Sentiment Chart
+                const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+                sentimentChart = new Chart(sentimentCtx, {
                     type: 'line',
                     data: {
                         labels: [],
                         datasets: [
                             {
-                                label: 'Pitch Points',
+                                label: 'Salesperson',
                                 data: [],
                                 borderColor: '#0088FE',
                                 tension: 0.1,
                                 fill: false
                             },
                             {
-                                label: 'Shark Engagement',
+                                label: 'Customer',
                                 data: [],
                                 borderColor: '#00C49F',
                                 tension: 0.1,
@@ -581,64 +431,50 @@
                         maintainAspectRatio: false,
                         scales: {
                             y: {
-                                min: 0,
-                                max: 10,
+                                min: -1,
+                                max: 1,
                                 title: {
                                     display: true,
-                                    text: 'Engagement Level'
+                                    text: 'Sentiment'
                                 }
                             },
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'Pitch Timeline (seconds)'
+                                    text: 'Time (seconds)'
                                 }
                             }
                         }
                     }
                 });
                 
-                // Clarity vs Confusion Chart
-                const clarityCtx = document.getElementById('clarityChart').getContext('2d');
-                topicChart = new Chart(clarityCtx, {
-                    type: 'bar',
+                // Topic Distribution Chart
+                const topicCtx = document.getElementById('topicChart').getContext('2d');
+                topicChart = new Chart(topicCtx, {
+                    type: 'pie',
                     data: {
-                        labels: ['Business Model', 'Product', 'Market', 'Ask'],
-                        datasets: [
-                            {
-                                label: 'Clarity Score',
-                                data: [],
-                                backgroundColor: '#0088FE'
-                            },
-                            {
-                                label: 'Confusion Triggers',
-                                data: [],
-                                backgroundColor: '#FF8042'
-                            }
-                        ]
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+                        }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 10
-                            }
-                        }
+                        maintainAspectRatio: false
                     }
                 });
                 
-                // Objection Handling Chart
-                const objectionCtx = document.getElementById('objectionChart').getContext('2d');
-                painPointsChart = new Chart(objectionCtx, {
+                // Pain Points Chart
+                const painPointsCtx = document.getElementById('painPointsChart').getContext('2d');
+                painPointsChart = new Chart(painPointsCtx, {
                     type: 'bar',
                     data: {
                         labels: [],
                         datasets: [{
-                            label: 'Effectiveness Score',
+                            label: 'Score',
                             data: [],
-                            backgroundColor: '#00C49F'
+                            backgroundColor: '#FF8042'
                         }]
                     },
                     options: {
@@ -647,37 +483,7 @@
                         indexAxis: 'y',
                         scales: {
                             x: {
-                                beginAtZero: true,
-                                max: 10
-                            }
-                        }
-                    }
-                });
-                
-                // Shark Interest Profile Chart
-                const sharkInterestCtx = document.getElementById('sharkInterestChart').getContext('2d');
-                sharkInterestChart = new Chart(sharkInterestCtx, {
-                    type: 'radar',
-                    data: {
-                        labels: ['Mark', 'Daymond', 'Lori', 'Kevin', 'Robert', 'Guest Shark'],
-                        datasets: [{
-                            label: 'Interest Level',
-                            data: [0, 0, 0, 0, 0, 0],
-                            backgroundColor: 'rgba(0, 136, 254, 0.2)',
-                            borderColor: '#0088FE',
-                            pointBackgroundColor: '#0088FE'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            r: {
-                                min: 0,
-                                max: 10,
-                                ticks: {
-                                    stepSize: 2
-                                }
+                                beginAtZero: true
                             }
                         }
                     }
@@ -686,178 +492,75 @@
             
             // Reset charts to empty state
             function resetCharts() {
-                // Reset visualizer if it exists
-                if (animationId) {
-                    cancelAnimationFrame(animationId);
-                    animationId = null;
-                }
-                // Reset Pitch Resonance Chart
+                // Reset Sentiment Chart
                 sentimentChart.data.labels = [];
                 sentimentChart.data.datasets[0].data = [];
                 sentimentChart.data.datasets[1].data = [];
                 sentimentChart.update();
                 
-                // Reset Clarity Chart
-                topicChart.data.datasets[0].data = [0, 0, 0, 0];
-                topicChart.data.datasets[1].data = [0, 0, 0, 0];
+                // Reset Topic Chart
+                topicChart.data.labels = [];
+                topicChart.data.datasets[0].data = [];
                 topicChart.update();
                 
-                // Reset Objection Chart
+                // Reset Pain Points Chart
                 painPointsChart.data.labels = [];
                 painPointsChart.data.datasets[0].data = [];
                 painPointsChart.update();
                 
-                // Reset Shark Interest Chart
-                if (sharkInterestChart) {
-                    sharkInterestChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0];
-                    sharkInterestChart.update();
-                }
-                
-                // Reset Value Communication Score
-                document.getElementById('valueTarget').textContent = '0';
-                document.getElementById('valueScore').textContent = 'Score: 0/100';
-                document.getElementById('valueProgressBar').style.width = '0%';
+                // Reset Budget Estimation
+                document.getElementById('budgetTarget').textContent = '$0';
+                document.getElementById('budgetMin').textContent = '$0';
+                document.getElementById('budgetMax').textContent = '$0';
+                document.getElementById('budgetCurrent').textContent = 'Current: $0';
+                document.getElementById('budgetProgressBar').style.width = '0%';
                 
                 // Reset Key Insights
                 document.getElementById('keyInsights').innerHTML = '<li class="text-gray-500">Insights will appear here after analysis.</li>';
             }
             
-            // Initialize audio visualizer
-            function initAudioVisualizer(stream) {
-                // Show visualizer container
-                document.getElementById('visualizerContainer').classList.remove('hidden');
+            // Update sentiment chart
+            function updateSentimentChart(sentimentData) {
+                if (!sentimentData || sentimentData.length === 0) return;
                 
-                // Get canvas and context
-                visualizerCanvas = document.getElementById('audioVisualizer');
-                visualizerCanvasCtx = visualizerCanvas.getContext('2d');
-                
-                // Set canvas dimensions
-                visualizerCanvas.width = visualizerCanvas.offsetWidth;
-                visualizerCanvas.height = visualizerCanvas.offsetHeight;
-                
-                // Create audio context
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Create analyzer
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                
-                // Connect audio source
-                audioSource = audioContext.createMediaStreamSource(stream);
-                audioSource.connect(analyser);
-                
-                // Start drawing
-                function draw() {
-                    animationId = requestAnimationFrame(draw);
-                    
-                    // Get frequency data
-                    analyser.getByteFrequencyData(dataArray);
-                    
-                    // Clear canvas
-                    visualizerCanvasCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
-                    
-                    // Set bar width and spacing
-                    const barWidth = (visualizerCanvas.width / bufferLength) * 2.5;
-                    let barHeight;
-                    let x = 0;
-                    
-                    // Draw bars
-                    for (let i = 0; i < bufferLength; i++) {
-                        barHeight = dataArray[i] / 2;
-                        
-                        // Create gradient
-                        const gradient = visualizerCanvasCtx.createLinearGradient(
-                            0, visualizerCanvas.height - barHeight, 0, visualizerCanvas.height
-                        );
-                        gradient.addColorStop(0, '#3B82F6'); // Blue-500
-                        gradient.addColorStop(1, '#60A5FA'); // Blue-400
-                        
-                        visualizerCanvasCtx.fillStyle = gradient;
-                        visualizerCanvasCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
-                        
-                        x += barWidth + 1;
-                    }
-                }
-                
-                draw();
-            }
-            
-            // Stop visualizer
-            function stopVisualizer() {
-                if (typeof animationId !== 'undefined' && animationId) {
-                    cancelAnimationFrame(animationId);
-                    animationId = null;
-                }
-                
-                if (audioContext) {
-                    if (audioSource) {
-                        audioSource.disconnect();
-                    }
-                    
-                    // Close audio context if supported
-                    if (audioContext.state !== 'closed' && audioContext.close) {
-                        audioContext.close();
-                    }
-                }
-                
-                // Reset variables
-                audioContext = null;
-                analyser = null;
-                audioSource = null;
-                visualizerCanvas = null;
-                visualizerCanvasCtx = null;
-            }
-            
-            // Update pitch resonance chart
-            function updateResonanceChart(resonanceData) {
-                if (!resonanceData || resonanceData.length === 0) return;
-                
-                sentimentChart.data.labels = resonanceData.map(entry => Math.floor(entry.time / 1000));
-                sentimentChart.data.datasets[0].data = resonanceData.map(entry => entry.pitchPoints);
-                sentimentChart.data.datasets[1].data = resonanceData.map(entry => entry.sharkEngagement);
+                sentimentChart.data.labels = sentimentData.map(entry => Math.floor(entry.time / 1000));
+                sentimentChart.data.datasets[0].data = sentimentData.map(entry => entry.salesperson);
+                sentimentChart.data.datasets[1].data = sentimentData.map(entry => entry.customer);
                 sentimentChart.update();
             }
             
-            // Update clarity vs confusion chart
-            function updateClarityChart(clarityData) {
-                if (!clarityData) return;
+            // Update topic distribution chart
+            function updateTopicChart(topicData) {
+                if (!topicData || topicData.length === 0) return;
                 
-                topicChart.data.datasets[0].data = clarityData.clarity;
-                topicChart.data.datasets[1].data = clarityData.confusion;
+                topicChart.data.labels = topicData.map(entry => entry.name);
+                topicChart.data.datasets[0].data = topicData.map(entry => entry.value);
                 topicChart.update();
             }
             
-            // Update objection handling chart
-            function updateObjectionChart(objectionData) {
-                if (!objectionData || objectionData.length === 0) return;
+            // Update pain points chart
+            function updatePainPointsChart(painPointsData) {
+                if (!painPointsData || painPointsData.length === 0) return;
                 
-                painPointsChart.data.labels = objectionData.map(entry => entry.objection);
-                painPointsChart.data.datasets[0].data = objectionData.map(entry => entry.effectiveness);
+                painPointsChart.data.labels = painPointsData.map(entry => entry.category);
+                painPointsChart.data.datasets[0].data = painPointsData.map(entry => entry.score);
                 painPointsChart.update();
             }
             
-            // Update shark interest profile chart
-            function updateSharkInterestChart(sharkData) {
-                if (!sharkData || !sharkData.sharks) return;
+            // Update budget estimation display
+            function updateBudgetEstimation(budgetData) {
+                if (!budgetData) return;
                 
-                sharkInterestChart.data.datasets[0].data = sharkData.sharks;
-                sharkInterestChart.update();
-            }
-            
-            // Update value communication display
-            function updateValueCommunication(valueData) {
-                if (!valueData) return;
+                const { min, max, target, current } = budgetData;
                 
-                const { score, max } = valueData;
-                
-                document.getElementById('valueTarget').textContent = score;
-                document.getElementById('valueScore').textContent = `Score: ${score}/${max}`;
+                document.getElementById('budgetTarget').textContent = `$${target.toLocaleString()}`;
+                document.getElementById('budgetMin').textContent = `$${min.toLocaleString()}`;
+                document.getElementById('budgetMax').textContent = `$${max.toLocaleString()}`;
+                document.getElementById('budgetCurrent').textContent = `Current: $${current.toLocaleString()}`;
                 
                 // Calculate percentage for progress bar
-                const percentage = max > 0 ? (score / max * 100) : 0;
-                document.getElementById('valueProgressBar').style.width = `${percentage}%`;
+                const percentage = max > 0 ? (current / max * 100) : 0;
+                document.getElementById('budgetProgressBar').style.width = `${percentage}%`;
             }
             
             // Update key insights
