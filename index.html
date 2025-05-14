@@ -3,21 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EARWORM - Sales Intelligence Dashboard</title>
+    <title>Sales Conversation Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
-        
-        * {
-            font-family: 'Rajdhani', sans-serif;
-        }
-        
-        .mono {
-            font-family: 'Share Tech Mono', monospace;
-        }
-        
         .record-dot {
             display: inline-block;
             width: 12px;
@@ -27,185 +16,56 @@
             margin-right: 5px;
             animation: pulse 1.5s ease infinite;
         }
-        
         @keyframes pulse {
             0% { transform: scale(0.8); opacity: 0.8; }
             50% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(0.8); opacity: 0.8; }
         }
-        
         .spinner {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(75, 85, 99, 0.3);
+            border: 3px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            border-top-color: #10B981;
+            border-top-color: #3498db;
             animation: spin 1s ease-in-out infinite;
             margin-right: 10px;
         }
-        
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
         .transcript-container {
             max-height: 400px;
             overflow-y: auto;
             scroll-behavior: smooth;
         }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #1F2937;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #4B5563;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #10B981;
-        }
-        
-        /* Hexagonal grid background */
-        .hex-background {
-            background-color: #111827;
-            background-image: 
-                linear-gradient(to right, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        
-        /* Panel styling */
-        .panel {
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            background: rgba(17, 24, 39, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(16, 185, 129, 0.1);
-        }
-        
-        /* Glowing effect for important elements */
-        .glow {
-            text-shadow: 0 0 5px rgba(16, 185, 129, 0.7);
-        }
-        
-        .panel-header {
-            position: relative;
-            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        
-        .panel-header:before {
-            content: "";
-            position: absolute;
-            left: -1px;
-            top: -1px;
-            height: calc(100% + 2px);
-            width: 4px;
-            background: #10B981;
-        }
-        
-        .military-btn {
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(16, 185, 129, 0.7);
-        }
-        
-        .military-btn:before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(16, 185, 129, 0.2),
-                transparent
-            );
-            transition: all 0.6s ease;
-        }
-        
-        .military-btn:hover:before {
-            left: 100%;
-        }
-        
-        /* Target reticle design */
-        .reticle {
-            position: relative;
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-        }
-        
-        .reticle:before, .reticle:after {
-            content: "";
-            position: absolute;
-            background-color: #10B981;
-        }
-        
-        .reticle:before {
-            top: 9px;
-            left: 0;
-            width: 20px;
-            height: 2px;
-        }
-        
-        .reticle:after {
-            top: 0;
-            left: 9px;
-            width: 2px;
-            height: 20px;
-        }
-        
-        /* Chart overrides */
-        #sentimentChart, #topicChart, #painPointsChart {
-            filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.2));
-        }
     </style>
 </head>
-<body class="bg-gray-900 hex-background text-gray-100">
+<body class="bg-gray-50">
     <div class="flex flex-col h-screen">
         <!-- Header -->
-        <header class="bg-gray-800 shadow-md border-b border-emerald-700 p-4">
+        <header class="bg-white shadow p-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <div class="mr-3 flex items-center">
-                        <i class="fas fa-satellite-dish text-emerald-500 mr-2"></i>
-                        <h1 class="text-2xl font-bold text-emerald-400 tracking-wider glow mono">EARWORM<span class="text-xs ml-1 text-gray-400 align-top">v2.5</span></h1>
-                    </div>
-                    <div class="text-xs text-gray-400 mono">
-                        TACTICAL SALES INTEL SYSTEM
-                    </div>
-                </div>
+                <h1 class="text-xl font-bold text-gray-800">AI Sales Data Analyst Dashboard</h1>
                 <div class="flex items-center space-x-4">
                     <button 
                         id="recordButton"
-                        class="px-4 py-2 rounded-md font-medium bg-emerald-700 text-gray-100 military-btn"
+                        class="px-4 py-2 rounded-md font-medium bg-green-500 text-white"
                     >
-                        <i class="fas fa-microphone mr-2"></i> START MISSION
+                        Start Recording
                     </button>
-                    <div id="recordingStatus" class="hidden mono">
-                        <span class="record-dot"></span> RECORDING... <span id="recordingTime" class="text-emerald-400">00:00</span>
+                    <div id="recordingStatus" class="hidden">
+                        <span class="record-dot"></span> Recording... <span id="recordingTime">00:00</span>
                     </div>
                     <button 
                         id="processButton"
-                        class="px-4 py-2 rounded-md font-medium bg-blue-800 text-gray-100 opacity-50 cursor-not-allowed military-btn"
+                        class="px-4 py-2 rounded-md font-medium bg-blue-500 text-white opacity-50 cursor-not-allowed"
                         disabled
                     >
-                        <i class="fas fa-satellite mr-2"></i> ANALYZE INTEL
+                        Analyze Conversation
                     </button>
-                    <div id="processingStatus" class="hidden mono">
-                        <span class="spinner"></span> PROCESSING...
+                    <div id="processingStatus" class="hidden">
+                        <span class="spinner"></span> Processing...
                     </div>
                 </div>
             </div>
@@ -215,123 +75,87 @@
         <main class="flex-1 p-6 overflow-auto">
             <div class="grid grid-cols-12 gap-6">
                 <!-- Transcript Panel -->
-                <div class="col-span-6 panel rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-4 panel-header">
-                        <div class="flex items-center">
-                            <div class="reticle mr-2"></div>
-                            <h2 class="text-lg font-semibold text-emerald-400 uppercase tracking-wider">Intel Transcript</h2>
-                            <div class="ml-auto text-xs text-gray-400 mono">SEC.LEVEL: ALPHA-7</div>
-                        </div>
+                <div class="col-span-6 bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Conversation Transcript</h2>
                     </div>
-                    <div id="transcript" class="p-4 transcript-container bg-gray-900 bg-opacity-60">
-                        <p class="text-gray-500 mono">TRANSCRIPT WILL APPEAR AFTER MISSION COMPLETION.</p>
+                    <div id="transcript" class="p-4 transcript-container">
+                        <p class="text-gray-500">Transcript will appear here after recording and analysis.</p>
                     </div>
                 </div>
                 
                 <!-- Sentiment Chart -->
-                <div class="col-span-6 panel rounded-lg shadow-lg">
-                    <div class="p-4 panel-header">
-                        <div class="flex items-center">
-                            <div class="reticle mr-2"></div>
-                            <h2 class="text-lg font-semibold text-emerald-400 uppercase tracking-wider">Psychological Profile</h2>
-                            <div class="ml-auto text-xs text-gray-400 mono">REALTIME TRAJECTORY</div>
-                        </div>
+                <div class="col-span-6 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Sentiment Trajectory</h2>
                     </div>
-                    <div class="p-4 bg-gray-900 bg-opacity-60" style="height: 300px;">
+                    <div class="p-4" style="height: 300px;">
                         <canvas id="sentimentChart"></canvas>
                     </div>
                 </div>
                 
                 <!-- Topic Distribution -->
-                <div class="col-span-4 panel rounded-lg shadow-lg">
-                    <div class="p-4 panel-header">
-                        <div class="flex items-center">
-                            <div class="reticle mr-2"></div>
-                            <h2 class="text-lg font-semibold text-emerald-400 uppercase tracking-wider">Topic Scan</h2>
-                            <div class="ml-auto text-xs text-gray-400 mono">FREQUENCY ANALYSIS</div>
-                        </div>
+                <div class="col-span-4 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Topic Distribution</h2>
                     </div>
-                    <div class="p-4 bg-gray-900 bg-opacity-60" style="height: 250px;">
+                    <div class="p-4" style="height: 250px;">
                         <canvas id="topicChart"></canvas>
                     </div>
                 </div>
                 
                 <!-- Pain Points -->
-                <div class="col-span-4 panel rounded-lg shadow-lg">
-                    <div class="p-4 panel-header">
-                        <div class="flex items-center">
-                            <div class="reticle mr-2"></div>
-                            <h2 class="text-lg font-semibold text-emerald-400 uppercase tracking-wider">Vulnerability Map</h2>
-                            <div class="ml-auto text-xs text-gray-400 mono">EXPLOIT ANALYSIS</div>
-                        </div>
+                <div class="col-span-4 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Pain Points</h2>
                     </div>
-                    <div class="p-4 bg-gray-900 bg-opacity-60" style="height: 250px;">
+                    <div class="p-4" style="height: 250px;">
                         <canvas id="painPointsChart"></canvas>
                     </div>
                 </div>
                 
                 <!-- Budget Estimation -->
-                <div class="col-span-4 panel rounded-lg shadow-lg">
-                    <div class="p-4 panel-header">
-                        <div class="flex items-center">
-                            <div class="reticle mr-2"></div>
-                            <h2 class="text-lg font-semibold text-emerald-400 uppercase tracking-wider">Resource Assessment</h2>
-                            <div class="ml-auto text-xs text-gray-400 mono">BUDGET INTEL</div>
-                        </div>
+                <div class="col-span-4 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Budget Estimation</h2>
                     </div>
-                    <div class="p-4 bg-gray-900 bg-opacity-60" style="height: 250px;">
+                    <div class="p-4" style="height: 250px;">
                         <div class="flex flex-col items-center justify-center h-full">
-                            <div id="budgetTarget" class="text-3xl font-bold text-emerald-400 mono glow">
+                            <div id="budgetTarget" class="text-3xl font-bold text-gray-700">
                                 $0
                             </div>
-                            <div class="text-sm text-gray-400 uppercase tracking-wider mt-2">
-                                Target Acquisition Value
+                            <div class="text-sm text-gray-500 mt-2">
+                                Estimated Target Budget
                             </div>
-                            <div class="w-full mt-6 bg-gray-700 rounded-full h-4 border border-gray-600">
+                            <div class="w-full mt-6 bg-gray-200 rounded-full h-4">
                                 <div 
                                     id="budgetProgressBar"
-                                    class="bg-emerald-600 h-full rounded-full" 
+                                    class="bg-blue-600 h-4 rounded-full" 
                                     style="width: 0%"
                                 ></div>
                             </div>
-                            <div class="w-full flex justify-between text-xs mt-1 mono">
-                                <span id="budgetMin" class="text-gray-400">$0</span>
-                                <span id="budgetCurrent" class="text-emerald-400">CURRENT: $0</span>
-                                <span id="budgetMax" class="text-gray-400">$0</span>
+                            <div class="w-full flex justify-between text-xs mt-1">
+                                <span id="budgetMin">$0</span>
+                                <span id="budgetCurrent">Current: $0</span>
+                                <span id="budgetMax">$0</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Key Insights -->
-                <div class="col-span-12 panel rounded-lg shadow-lg">
-                    <div class="p-4 panel-header">
-                        <div class="flex items-center">
-                            <div class="reticle mr-2"></div>
-                            <h2 class="text-lg font-semibold text-emerald-400 uppercase tracking-wider">Strategic Intelligence</h2>
-                            <div class="ml-auto text-xs text-gray-400 mono">ACTIONABLE INSIGHTS</div>
-                        </div>
+                <div class="col-span-12 bg-white rounded-lg shadow">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-700">Key Insights</h2>
                     </div>
-                    <div class="p-4 bg-gray-900 bg-opacity-60">
-                        <ul id="keyInsights" class="list-none pl-6 space-y-2">
-                            <li class="text-gray-500 mono flex items-center">
-                                <i class="fas fa-angle-right text-emerald-500 mr-2"></i>
-                                INSIGHTS WILL APPEAR AFTER MISSION ANALYSIS.
-                            </li>
+                    <div class="p-4">
+                        <ul id="keyInsights" class="list-disc pl-6 space-y-2">
+                            <li class="text-gray-500">Insights will appear here after analysis.</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </main>
-        
-        <!-- Footer status bar -->
-        <footer class="bg-gray-800 border-t border-emerald-900 text-xs text-gray-400 p-2 mono">
-            <div class="flex justify-between items-center">
-                <div>STATUS: <span class="text-emerald-400">ACTIVE</span> | SYSTEM: <span class="text-emerald-400">OPERATIONAL</span></div>
-                <div>EARWORM TACTICAL SALES INTELLIGENCE SYSTEM | <span class="text-emerald-400">C.L.A.U.D.E. ENHANCED</span></div>
-                <div>LISTENING COORDINATES: <span class="text-emerald-400">41.80°N, 88.09°W</span> | SIGNAL: <span class="text-emerald-400">STRONG</span></div>
-            </div>
-        </footer>
     </div>
 
     <script>
@@ -356,10 +180,6 @@
             let sentimentChart = null;
             let topicChart = null;
             let painPointsChart = null;
-            
-            // Dark theme chart options
-            Chart.defaults.color = '#D1D5DB';
-            Chart.defaults.borderColor = 'rgba(75, 85, 99, 0.2)';
             
             // Initialize charts
             initializeCharts();
@@ -417,12 +237,12 @@
                     
                     // Update UI
                     isRecording = true;
-                    recordButton.innerHTML = '<i class="fas fa-stop-circle mr-2"></i> END MISSION';
-                    recordButton.classList.replace('bg-emerald-700', 'bg-red-700');
+                    recordButton.textContent = 'Stop Recording';
+                    recordButton.classList.replace('bg-green-500', 'bg-red-500');
                     recordingStatus.classList.remove('hidden');
                     
                     // Reset transcript and charts
-                    transcriptContainer.innerHTML = '<p class="text-gray-500 mono">MISSION IN PROGRESS...</p>';
+                    transcriptContainer.innerHTML = '<p class="text-gray-500">Recording in progress...</p>';
                     resetCharts();
                     
                 } catch (err) {
@@ -442,12 +262,12 @@
                     
                     // Update UI
                     isRecording = false;
-                    recordButton.innerHTML = '<i class="fas fa-microphone mr-2"></i> NEW MISSION';
-                    recordButton.classList.replace('bg-red-700', 'bg-emerald-700');
+                    recordButton.textContent = 'Start New Recording';
+                    recordButton.classList.replace('bg-red-500', 'bg-green-500');
                     recordingStatus.classList.add('hidden');
                     
                     // Update transcript
-                    transcriptContainer.innerHTML = '<p class="text-gray-500 mono">MISSION COMPLETE. CLICK "ANALYZE INTEL" TO PROCESS.</p>';
+                    transcriptContainer.innerHTML = '<p class="text-gray-500">Recording complete. Click "Analyze Conversation" to process.</p>';
                 }
             }
             
@@ -470,7 +290,7 @@
                 processingStatus.classList.remove('hidden');
                 processButton.disabled = true;
                 processButton.classList.add('opacity-50', 'cursor-not-allowed');
-                transcriptContainer.innerHTML = '<p class="text-gray-500 mono">PROCESSING AUDIO INTELLIGENCE...</p>';
+                transcriptContainer.innerHTML = '<p class="text-gray-500">Processing audio...</p>';
                 
                 try {
                     // Create form data
@@ -499,7 +319,7 @@
                     
                 } catch (error) {
                     console.error('Error processing audio:', error);
-                    transcriptContainer.innerHTML = `<p class="text-red-500 mono">ERROR: ${error.message}</p>`;
+                    transcriptContainer.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
                 } finally {
                     // Hide processing status
                     processingStatus.classList.add('hidden');
@@ -537,7 +357,7 @@
             // Update transcript display
             function updateTranscript(transcript) {
                 if (!transcript || transcript.length === 0) {
-                    transcriptContainer.innerHTML = '<p class="text-gray-500 mono">NO INTEL DATA AVAILABLE.</p>';
+                    transcriptContainer.innerHTML = '<p class="text-gray-500">No transcript data available.</p>';
                     return;
                 }
                 
@@ -547,19 +367,18 @@
                 // Create transcript entries
                 transcript.forEach((entry, index) => {
                     const entryElement = document.createElement('div');
-                    entryElement.className = 'mb-4 border-l-2 pl-3';
-                    entryElement.style.borderColor = entry.speaker === 'Salesperson' ? '#3B82F6' : '#10B981';
+                    entryElement.className = 'mb-4';
                     
                     const speakerElement = document.createElement('div');
-                    speakerElement.className = `font-semibold mono ${entry.speaker === 'Salesperson' ? 'text-blue-400' : 'text-emerald-400'}`;
+                    speakerElement.className = `font-semibold ${entry.speaker === 'Salesperson' ? 'text-blue-600' : 'text-green-600'}`;
                     
                     // Format timestamp as MM:SS
                     const minutes = Math.floor(entry.timestamp / 1000 / 60);
                     const seconds = Math.floor((entry.timestamp / 1000) % 60).toString().padStart(2, '0');
-                    speakerElement.innerHTML = `${entry.speaker === 'Salesperson' ? '<i class="fas fa-user-tie mr-1"></i>' : '<i class="fas fa-user mr-1"></i>'} ${entry.speaker} <span class="text-gray-500">${minutes}:${seconds}</span>`;
+                    speakerElement.textContent = `${entry.speaker} (${minutes}:${seconds})`;
                     
                     const textElement = document.createElement('div');
-                    textElement.className = 'mt-1 text-gray-300';
+                    textElement.className = 'mt-1 text-gray-700';
                     textElement.innerHTML = highlightKeywords(entry.text);
                     
                     entryElement.appendChild(speakerElement);
@@ -579,7 +398,7 @@
                 const regex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
                 
                 // Replace keywords with highlighted version
-                return text.replace(regex, '<span class="font-bold text-emerald-400">$1</span>');
+                return text.replace(regex, '<span class="font-bold text-blue-600">$1</span>');
             }
             
             // Initialize charts
@@ -594,69 +413,77 @@
                             {
                                 label: 'Salesperson',
                                 data: [],
-                                borderColor: '#3B82F6',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                borderWidth: 2,
-                                tension: 0.2,
-                                fill: false,
-                                pointBackgroundColor: '#3B82F6',
-                                pointBorderColor: '#111827',
-                                pointRadius: 4
+                                borderColor: '#0088FE',
+                                tension: 0.1,
+                                fill: false
                             },
                             {
                                 label: 'Customer',
                                 data: [],
-                                borderColor: '#10B981',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                borderWidth: 2,
-                                tension: 0.2,
-                                fill: false,
-                                pointBackgroundColor: '#10B981',
-                                pointBorderColor: '#111827',
-                                pointRadius: 4
+                                borderColor: '#00C49F',
+                                tension: 0.1,
+                                fill: false
                             }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Rajdhani', sans-serif",
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        },
                         scales: {
                             y: {
                                 min: -1,
                                 max: 1,
-                                grid: {
-                                    color: 'rgba(75, 85, 99, 0.2)'
-                                },
-                                ticks: {
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Share Tech Mono', monospace",
-                                        size: 10
-                                    }
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment'
                                 }
                             },
-                            y: {
-                                grid: {
-                                    color: 'rgba(75, 85, 99, 0.2)'
-                                },
-                                ticks: {
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Share Tech Mono', monospace",
-                                        size: 10
-                                    }
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time (seconds)'
                                 }
+                            }
+                        }
+                    }
+                });
+                
+                // Topic Distribution Chart
+                const topicCtx = document.getElementById('topicChart').getContext('2d');
+                topicChart = new Chart(topicCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                
+                // Pain Points Chart
+                const painPointsCtx = document.getElementById('painPointsChart').getContext('2d');
+                painPointsChart = new Chart(painPointsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Score',
+                            data: [],
+                            backgroundColor: '#FF8042'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true
                             }
                         }
                     }
@@ -685,11 +512,11 @@
                 document.getElementById('budgetTarget').textContent = '$0';
                 document.getElementById('budgetMin').textContent = '$0';
                 document.getElementById('budgetMax').textContent = '$0';
-                document.getElementById('budgetCurrent').textContent = 'CURRENT: $0';
+                document.getElementById('budgetCurrent').textContent = 'Current: $0';
                 document.getElementById('budgetProgressBar').style.width = '0%';
                 
                 // Reset Key Insights
-                document.getElementById('keyInsights').innerHTML = '<li class="text-gray-500 mono flex items-center"><i class="fas fa-angle-right text-emerald-500 mr-2"></i>INSIGHTS WILL APPEAR AFTER MISSION ANALYSIS.</li>';
+                document.getElementById('keyInsights').innerHTML = '<li class="text-gray-500">Insights will appear here after analysis.</li>';
             }
             
             // Update sentiment chart
@@ -706,7 +533,7 @@
             function updateTopicChart(topicData) {
                 if (!topicData || topicData.length === 0) return;
                 
-                topicChart.data.labels = topicData.map(entry => entry.name.toUpperCase());
+                topicChart.data.labels = topicData.map(entry => entry.name);
                 topicChart.data.datasets[0].data = topicData.map(entry => entry.value);
                 topicChart.update();
             }
@@ -715,7 +542,7 @@
             function updatePainPointsChart(painPointsData) {
                 if (!painPointsData || painPointsData.length === 0) return;
                 
-                painPointsChart.data.labels = painPointsData.map(entry => entry.category.toUpperCase());
+                painPointsChart.data.labels = painPointsData.map(entry => entry.category);
                 painPointsChart.data.datasets[0].data = painPointsData.map(entry => entry.score);
                 painPointsChart.update();
             }
@@ -726,26 +553,14 @@
                 
                 const { min, max, target, current } = budgetData;
                 
-                document.getElementById('budgetTarget').textContent = `${target.toLocaleString()}`;
-                document.getElementById('budgetMin').textContent = `${min.toLocaleString()}`;
-                document.getElementById('budgetMax').textContent = `${max.toLocaleString()}`;
-                document.getElementById('budgetCurrent').textContent = `CURRENT: ${current.toLocaleString()}`;
+                document.getElementById('budgetTarget').textContent = `$${target.toLocaleString()}`;
+                document.getElementById('budgetMin').textContent = `$${min.toLocaleString()}`;
+                document.getElementById('budgetMax').textContent = `$${max.toLocaleString()}`;
+                document.getElementById('budgetCurrent').textContent = `Current: $${current.toLocaleString()}`;
                 
                 // Calculate percentage for progress bar
                 const percentage = max > 0 ? (current / max * 100) : 0;
                 document.getElementById('budgetProgressBar').style.width = `${percentage}%`;
-                
-                // Change color based on progress
-                const progressBar = document.getElementById('budgetProgressBar');
-                if (percentage < 25) {
-                    progressBar.className = 'bg-red-600 h-full rounded-full';
-                } else if (percentage < 50) {
-                    progressBar.className = 'bg-yellow-600 h-full rounded-full';
-                } else if (percentage < 75) {
-                    progressBar.className = 'bg-blue-600 h-full rounded-full';
-                } else {
-                    progressBar.className = 'bg-emerald-600 h-full rounded-full';
-                }
             }
             
             // Update key insights
@@ -754,191 +569,20 @@
                 keyInsightsContainer.innerHTML = '';
                 
                 if (insights && insights.length > 0) {
-                    insights.forEach((insight, index) => {
+                    insights.forEach(insight => {
                         const insightElement = document.createElement('li');
-                        insightElement.className = 'text-gray-300 flex items-start mb-3';
-                        
-                        // Create a prefix with index number in military style
-                        const prefixSpan = document.createElement('span');
-                        prefixSpan.className = 'flex-shrink-0 w-8 text-emerald-400 mono font-bold';
-                        prefixSpan.textContent = `[${(index + 1).toString().padStart(2, '0')}]`;
-                        
-                        // Create icon element
-                        const iconSpan = document.createElement('span');
-                        iconSpan.className = 'flex-shrink-0 w-6 text-emerald-500';
-                        iconSpan.innerHTML = '<i class="fas fa-angle-right"></i>';
-                        
-                        // Create text element
-                        const textSpan = document.createElement('span');
-                        textSpan.className = 'flex-grow';
-                        textSpan.textContent = insight.toUpperCase();
-                        
-                        insightElement.appendChild(prefixSpan);
-                        insightElement.appendChild(iconSpan);
-                        insightElement.appendChild(textSpan);
+                        insightElement.className = 'text-gray-700';
+                        insightElement.textContent = insight;
                         keyInsightsContainer.appendChild(insightElement);
                     });
                 } else {
                     const placeholderElement = document.createElement('li');
-                    placeholderElement.className = 'text-gray-500 mono flex items-center';
-                    placeholderElement.innerHTML = '<i class="fas fa-angle-right text-emerald-500 mr-2"></i>NO ACTIONABLE INTEL AVAILABLE.';
+                    placeholderElement.className = 'text-gray-500';
+                    placeholderElement.textContent = 'No insights available.';
                     keyInsightsContainer.appendChild(placeholderElement);
                 }
             }
-            
-            // Add radar scan animation to create military feel
-            function initializeRadarAnimation() {
-                const panels = document.querySelectorAll('.panel');
-                let index = 0;
-                
-                setInterval(() => {
-                    // Remove highlight from all panels
-                    panels.forEach(panel => {
-                        panel.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(16, 185, 129, 0.1)';
-                    });
-                    
-                    // Highlight current panel
-                    panels[index].style.boxShadow = '0 0 0 1px rgba(16, 185, 129, 0.5), 0 0 15px rgba(16, 185, 129, 0.3)';
-                    
-                    // Move to next panel
-                    index = (index + 1) % panels.length;
-                }, 2000);
-            }
-            
-            // Initialize radar animation
-            initializeRadarAnimation();
-            
-            // Simulate incoming data notification
-            setInterval(() => {
-                const footer = document.querySelector('footer');
-                const randomPanel = document.querySelectorAll('.panel')[Math.floor(Math.random() * 5)];
-                
-                // Flash footer
-                footer.classList.add('bg-gray-700');
-                setTimeout(() => {
-                    footer.classList.remove('bg-gray-700');
-                }, 200);
-                
-                // Flash random panel header
-                const panelHeader = randomPanel.querySelector('.panel-header');
-                panelHeader.classList.add('bg-gray-800');
-                setTimeout(() => {
-                    panelHeader.classList.remove('bg-gray-800');
-                }, 300);
-                
-            }, 7000);
         });
     </script>
 </body>
 </html>
-                                title: {
-                                    display: true,
-                                    text: 'PSYCHOLOGICAL STATE',
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Share Tech Mono', monospace",
-                                        size: 10
-                                    }
-                                },
-                                ticks: {
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Share Tech Mono', monospace"
-                                    }
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(75, 85, 99, 0.2)'
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'TIME (SEC)',
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Share Tech Mono', monospace",
-                                        size: 10
-                                    }
-                                },
-                                ticks: {
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Share Tech Mono', monospace"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-                
-                // Topic Distribution Chart
-                const topicCtx = document.getElementById('topicChart').getContext('2d');
-                topicChart = new Chart(topicCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            data: [],
-                            backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
-                            borderColor: '#111827',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    color: '#D1D5DB',
-                                    font: {
-                                        family: "'Rajdhani', sans-serif",
-                                        size: 11
-                                    },
-                                    boxWidth: 15,
-                                    padding: 15
-                                }
-                            }
-                        }
-                    }
-                });
-                
-                // Pain Points Chart
-                const painPointsCtx = document.getElementById('painPointsChart').getContext('2d');
-                painPointsChart = new Chart(painPointsCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            label: 'VULNERABILITY LEVEL',
-                            data: [],
-                            backgroundColor: function(context) {
-                                const index = context.dataIndex;
-                                const value = context.dataset.data[index];
-                                return value > 7 ? '#EF4444' : 
-                                       value > 5 ? '#F59E0B' : 
-                                       value > 3 ? '#10B981' : 
-                                       '#3B82F6';
-                            },
-                            borderColor: '#111827',
-                            borderWidth: 1,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        indexAxis: 'y',
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                max: 10,
-                                grid: {
-                                    color: 'rgba(75, 85, 99, 0.2)'
-                                },
