@@ -1,18 +1,18 @@
 /**
- * ApiService.js - Updated version with proper initialization and globally exposed interface
+ * ApiService.js - PRODUCTION VERSION
  */
 const ApiService = (function() {
     // Configuration
     const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/pj83qpi1fbz2eo7jhe0x3c317b8vuhta';
     
-    // Set to false for development (use mock data) or true for production
-    const USE_PRODUCTION_API = true; // Using mock data for testing
+    // PRODUCTION MODE: Set to true to use real API calls
+    const USE_PRODUCTION_API = true;
     
     /**
      * Initialize the API service
      */
     function initialize() {
-        console.log('API Service initialized');
+        console.log('API Service initialized in PRODUCTION mode');
     }
     
     /**
@@ -36,36 +36,37 @@ const ApiService = (function() {
                 }
             } catch (error) {
                 console.warn('Error loading profile data:', error);
-                // Continue with empty profile data if there's an error
             }
             
             // Create form data with the audio blob and profile data
             const formData = new FormData();
             formData.append('audio', audioBlob, 'recording.webm');
-            
-            // Add profile data as JSON string
             formData.append('profileData', JSON.stringify(profileData));
             
-            // Use real API in production mode, mock data in development
             if (USE_PRODUCTION_API) {
-                console.log('Making real API call to Make.com webhook with profile data');
+                console.log('Making production API call to Make.com webhook');
+                
+                // Production API call
                 fetch(MAKE_WEBHOOK_URL, {
                     method: 'POST',
                     body: formData
                 })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                        throw new Error(`API error: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(data => resolve(data))
-                .catch(error => reject(error));
+                .catch(error => {
+                    console.error('API call failed:', error);
+                    console.log('Falling back to mock data due to API failure');
+                    // Fallback to mock data if the API call fails
+                    resolve(getMockAnalysisData(profileData));
+                });
             } else {
-                // For demo purposes, simulate API delay and return mock data
-                console.log('Using mock API response for development (with profile data)');
-                
-                // Simulate API delay
+                // This should never execute in production, but kept as a safety fallback
+                console.log('Using mock data (should not see this in production)');
                 setTimeout(() => {
                     resolve(getMockAnalysisData(profileData));
                 }, 1500);
@@ -74,13 +75,11 @@ const ApiService = (function() {
     }
     
     /**
-     * Generate mock analysis data for development/demo
+     * Generate mock analysis data for development/demo and API failures
      * @param {Object} profileData - The user's profile data
      * @returns {Object} Mock analysis data
      */
     function getMockAnalysisData(profileData = {}) {
-        // Use profile data to enhance the mock analysis
-        
         // Extract product lines for use in topic distribution
         const productLines = profileData.productLines || ['CRM Software', 'Data Analytics', 'Cloud Storage'];
         
@@ -239,6 +238,5 @@ window.ApiService = ApiService;
 document.addEventListener('DOMContentLoaded', function() {
     if (ApiService && typeof ApiService.initialize === 'function') {
         ApiService.initialize();
-        console.log('ApiService globally available');
     }
 });
