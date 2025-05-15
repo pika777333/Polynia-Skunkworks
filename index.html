@@ -10,6 +10,61 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/page-transitions.css">
+    <style>
+        /* Critical styles to ensure UI elements work correctly */
+        .record-dot {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: #e83e8c;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1.5s ease infinite;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(232, 62, 140, 0.2);
+            border-radius: 50%;
+            border-top-color: #e83e8c;
+            margin-right: 10px;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.8; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .waveform {
+            display: flex;
+            align-items: center;
+            height: 60px;
+            gap: 3px;
+        }
+
+        .waveform-bar {
+            width: 3px;
+            background-color: rgba(232, 62, 140, 0.7);
+            border-radius: 3px;
+            transition: height 0.2s ease;
+        }
+
+        .earworm-gradient {
+            background: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
+        }
+
+        .earworm-primary-text {
+            color: #e83e8c;
+        }
+    </style>
 </head>
 <body>
     <div class="flex h-screen overflow-hidden bg-gray-50">
