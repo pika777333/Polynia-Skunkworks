@@ -1,0 +1,189 @@
+/* page-transitions.css - Enhanced animations for page transitions */
+
+/* Base transitions for view containers */
+#dashboardView, #metricsView, #userView {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    will-change: opacity, transform;
+}
+
+/* Transition states */
+.view-entering {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.view-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.view-exiting {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+/* Enhanced navigation link transitions */
+.nav-link {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    transition: width 0.3s ease;
+    background: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+/* Active link animation */
+.nav-link.active {
+    transform: translateY(-2px);
+}
+
+/* Loading indicator for page transitions */
+.page-transition-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #e83e8c, #6f42c1);
+    transform: scaleX(0);
+    transform-origin: left;
+    z-index: 9999;
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+.page-transition-loader.loading {
+    opacity: 1;
+    animation: loading-bar 1.5s ease infinite;
+}
+
+@keyframes loading-bar {
+    0% {
+        transform: scaleX(0);
+        transform-origin: left;
+    }
+    50% {
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+    50.1% {
+        transform-origin: right;
+    }
+    100% {
+        transform: scaleX(0);
+        transform-origin: right;
+    }
+}
+
+/* Content staggered animations */
+.stagger-item {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.stagger-item.animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Page content container animations */
+.page-content {
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.page-content.animated {
+    animation: page-fade-in 0.6s ease forwards;
+}
+
+@keyframes page-fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card loading skeletons for content that's loading */
+.skeleton-card {
+    background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Loading spinner for async content */
+.loading-spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(232, 62, 140, 0.2);
+    border-radius: 50%;
+    border-top-color: #e83e8c;
+    animation: spinner-rotation 1s ease-in-out infinite;
+}
+
+@keyframes spinner-rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Page transition wrapper */
+.page-transition-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+/* View cascade animation helper */
+.cascade-item {
+    opacity: 0;
+    transform: translateY(15px);
+}
+
+.cascade-container.animate .cascade-item {
+    animation: cascade-in 0.5s ease forwards;
+}
+
+.cascade-container.animate .cascade-item:nth-child(1) { animation-delay: 0.1s; }
+.cascade-container.animate .cascade-item:nth-child(2) { animation-delay: 0.2s; }
+.cascade-container.animate .cascade-item:nth-child(3) { animation-delay: 0.3s; }
+.cascade-container.animate .cascade-item:nth-child(4) { animation-delay: 0.4s; }
+.cascade-container.animate .cascade-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes cascade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
