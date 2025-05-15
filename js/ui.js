@@ -23,22 +23,26 @@ const UI = (function() {
      * Initialize the UI module
      */
     function initialize() {
-        // Cache DOM elements
-        recordButton = document.getElementById('recordButton');
-        processButton = document.getElementById('processButton');
-        recordingStatus = document.getElementById('recordingStatus');
-        recordingTime = document.getElementById('recordingTime');
-        processingStatus = document.getElementById('processingStatus');
-        transcriptContainer = document.getElementById('transcript');
-        waveformContainer = document.getElementById('waveformContainer');
-        audioWaveform = document.getElementById('audioWaveform');
-        
-        // Initialize UI components
-        createWaveform();
-        animateLogo();
-        animateCardsOnLoad();
-        addButtonRippleEffects();
+    // Cache DOM elements
+    recordButton = document.getElementById('recordButton');
+    processButton = document.getElementById('processButton');
+    recordingStatus = document.getElementById('recordingStatus');
+    recordingTime = document.getElementById('recordingTime');
+    processingStatus = document.getElementById('processingStatus');
+    transcriptContainer = document.getElementById('transcript');
+    waveformContainer = document.getElementById('waveformContainer');
+    audioWaveform = document.getElementById('audioWaveform');
+    
+    // Initialize UI components
+    animateLogo();
+    animateCardsOnLoad();
+    addButtonRippleEffects();
+    
+    // Initialize AudioVisualizer if available
+    if (typeof AudioVisualizer !== 'undefined') {
+        AudioVisualizer.initialize();
     }
+}
     
     /**
      * Create the audio waveform visualization
@@ -167,94 +171,90 @@ const UI = (function() {
      * Update the UI after recording starts
      */
     function updateUIAfterRecordingStarted() {
-        // Start timer
-        recordingStartTime = Date.now();
-        timerInterval = setInterval(updateRecordingTime, 1000);
-        
-        // Update button text and style
-        recordButton.innerHTML = `
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
-            </svg>
-            Stop Recording
-        `;
-        
-        // Show recording status
-        recordingStatus.classList.remove('hidden');
-        recordingStatus.classList.add('flex');
-        
-        // Show and animate waveform
-        waveformContainer.classList.remove('hidden');
-        waveformContainer.classList.add('flex', 'flex-col');
-        animateWaveform(true);
-        
-        // Update transcript message
-        transcriptContainer.innerHTML = '<p class="text-gray-500">Recording in progress...</p>';
-        
-        // Change record button color
-        gsap.to(recordButton, {
-            backgroundColor: '#e83e8c',
-            backgroundImage: 'none',
-            duration: 0.3
-        });
-    }
+    // Start timer
+    recordingStartTime = Date.now();
+    timerInterval = setInterval(updateRecordingTime, 1000);
+    
+    // Update button text and style
+    recordButton.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+        </svg>
+        Stop Recording
+    `;
+    
+    // Show recording status
+    recordingStatus.classList.remove('hidden');
+    recordingStatus.classList.add('flex');
+    
+    // Show waveform
+    waveformContainer.classList.remove('hidden');
+    waveformContainer.classList.add('flex', 'flex-col');
+    
+    // Update transcript message
+    transcriptContainer.innerHTML = '<p class="text-gray-500">Recording in progress...</p>';
+    
+    // Change record button color
+    gsap.to(recordButton, {
+        backgroundColor: '#e83e8c',
+        backgroundImage: 'none',
+        duration: 0.3
+    });
+}
     
     /**
      * Update the UI after recording stops
      */
     function updateUIAfterRecordingStopped() {
-        // Clear timer
-        clearInterval(timerInterval);
-        
-        // Update button text and style
-        recordButton.innerHTML = `
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-            </svg>
-            Start New Recording
-        `;
-        
-        // Restore button styling
-        gsap.to(recordButton, {
-            backgroundImage: 'linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%)',
-            duration: 0.3
-        });
-        
-        // Hide recording status
-        recordingStatus.classList.add('hidden');
-        recordingStatus.classList.remove('flex');
-        
-        // Stop waveform animation
-        animateWaveform(false);
-        
-        // Update transcript
-        transcriptContainer.innerHTML = '<p class="text-gray-500">Recording complete. Click "Analyze Conversation" to process.</p>';
-        
-        // Enable process button with animation
-        processButton.disabled = false;
-        processButton.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-        processButton.classList.add('earworm-gradient');
-        
-        gsap.from(processButton, {
-            scale: 0.9,
-            duration: 0.5,
-            ease: "elastic.out(1, 0.3)",
-            onComplete: () => {
-                // Add a subtle pulse animation
-                gsap.to(processButton, {
-                    scale: 1.05,
-                    repeat: 2,
-                    yoyo: true,
-                    duration: 0.4,
-                    ease: "power1.inOut"
-                });
-            }
-        });
-        
-        // Show success toast
-        showToast('Recording completed successfully!');
-    }
+    // Clear timer
+    clearInterval(timerInterval);
+    
+    // Update button text and style
+    recordButton.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+        </svg>
+        Start New Recording
+    `;
+    
+    // Restore button styling
+    gsap.to(recordButton, {
+        backgroundImage: 'linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%)',
+        duration: 0.3
+    });
+    
+    // Hide recording status
+    recordingStatus.classList.add('hidden');
+    recordingStatus.classList.remove('flex');
+    
+    // Update transcript
+    transcriptContainer.innerHTML = '<p class="text-gray-500">Recording complete. Click "Analyze Conversation" to process.</p>';
+    
+    // Enable process button with animation
+    processButton.disabled = false;
+    processButton.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+    processButton.classList.add('earworm-gradient');
+    
+    gsap.from(processButton, {
+        scale: 0.9,
+        duration: 0.5,
+        ease: "elastic.out(1, 0.3)",
+        onComplete: () => {
+            // Add a subtle pulse animation
+            gsap.to(processButton, {
+                scale: 1.05,
+                repeat: 2,
+                yoyo: true,
+                duration: 0.4,
+                ease: "power1.inOut"
+            });
+        }
+    });
+    
+    // Show success toast
+    showToast('Recording completed successfully!');
+}
     
     /**
      * Update the recording time display
