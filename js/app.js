@@ -1,16 +1,5 @@
-// app.js
-// app.js - Updated imports
-// Import modules that support ES modules
-import * as Router from './router.js';
-import * as ErrorHandlerModule from './errorHandler.js';
-import { ProfileManager } from './profile.js';
-
-// Access global objects for non-module scripts
-const AudioRecorder = window.AudioRecorder;
-const AudioVisualizer = window.AudioVisualizer;
-const ChartManager = window.ChartManager;
-const UI = window.UI;
-const ErrorHandler = window.ErrorHandler || ErrorHandlerModule;
+// app.js - FIXED VERSION
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 /**
  * Initialize the application
@@ -20,37 +9,46 @@ function initializeApp() {
     
     try {
         // Initialize UI first so we can display loading states
-        UI.initialize();
-        
-        // Initialize router
-        Router.initialize();
-        
-        // Register view callbacks
-        Router.registerViewCallback('metrics', () => {
-            if (typeof window.MetricsView !== 'undefined') {
-                window.MetricsView.initialize();
-            }
-        });
-        
-        // Register user view callback
-        Router.registerViewCallback('user', () => {
-            // Initialize the React component for user profile
-            if (typeof window.initializeReactComponent === 'function') {
-                window.initializeReactComponent('userView', window.UserProfile);
-            }
-        });
-        
-        // Initialize core components
-        if (ChartManager && ChartManager.initialize) {
-            ChartManager.initialize();
+        if (window.UI) {
+            window.UI.initialize();
+        } else {
+            console.error("UI module not found");
+            return;
         }
         
-        if (AudioRecorder && AudioRecorder.initialize) {
-            AudioRecorder.initialize();
+        // Initialize router if available
+        if (window.Router) {
+            window.Router.initialize();
+            
+            // Register view callbacks
+            window.Router.registerViewCallback('metrics', () => {
+                if (typeof window.MetricsView !== 'undefined') {
+                    window.MetricsView.initialize();
+                }
+            });
+            
+            // Register user view callback
+            window.Router.registerViewCallback('user', () => {
+                // Initialize the React component for user profile
+                if (typeof window.initializeReactComponent === 'function') {
+                    window.initializeReactComponent('userView', window.UserProfile);
+                }
+            });
+        } else {
+            console.error("Router module not found");
         }
         
-        if (AudioVisualizer && AudioVisualizer.initialize) {
-            AudioVisualizer.initialize();
+        // Initialize core components with availability checks
+        if (window.ChartManager && typeof window.ChartManager.initialize === 'function') {
+            window.ChartManager.initialize();
+        }
+        
+        if (window.AudioRecorder && typeof window.AudioRecorder.initialize === 'function') {
+            window.AudioRecorder.initialize();
+        }
+        
+        if (window.AudioVisualizer && typeof window.AudioVisualizer.initialize === 'function') {
+            window.AudioVisualizer.initialize();
         }
         
         // Setup event listeners
@@ -59,16 +57,14 @@ function initializeApp() {
         console.log('Application initialized successfully');
     } catch (error) {
         console.error('Error during initialization:', error);
-        if (ErrorHandler && ErrorHandler.handleError) {
-            ErrorHandler.handleError(error, {
+        if (window.ErrorHandler && window.ErrorHandler.handleError) {
+            window.ErrorHandler.handleError(error, {
                 context: 'app:initialization',
-                severity: ErrorHandler.ErrorSeverity ? ErrorHandler.ErrorSeverity.CRITICAL : 'critical'
+                severity: window.ErrorHandler.ErrorSeverity ? window.ErrorHandler.ErrorSeverity.CRITICAL : 'critical'
             });
         }
     }
 }
-
-// Rest of the app.js code...
 
 /**
  * Set up all event listeners for the application
@@ -78,49 +74,70 @@ function setupEventListeners() {
     const recordButton = document.getElementById('recordButton');
     if (recordButton) {
         recordButton.addEventListener('click', handleRecordButtonClick);
+        console.log('Record button event listener attached');
+    } else {
+        console.error('Record button not found');
     }
     
     // Process button click handler
     const processButton = document.getElementById('processButton');
     if (processButton) {
         processButton.addEventListener('click', handleProcessButtonClick);
+        console.log('Process button event listener attached');
+    } else {
+        console.error('Process button not found');
     }
+    
+    // Nav links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            if (window.Router && window.Router.navigateTo) {
+                window.Router.navigateTo(target);
+            }
+        });
+    });
 }
 
 /**
  * Handle record button click
  */
 async function handleRecordButtonClick() {
+    console.log('Record button clicked');
+    
+    if (!window.AudioRecorder) {
+        console.error('AudioRecorder not available');
+        window.UI.showToast('Audio recording not available', 'error');
+        return;
+    }
+    
     // Check if currently recording
-    if (AudioRecorder.isRecording()) {
+    if (window.AudioRecorder.isRecording()) {
         try {
             // Stop recording
-            await AudioRecorder.stopRecording();
+            await window.AudioRecorder.stopRecording();
             
             // Update UI
-            UI.updateUIAfterRecordingStopped();
+            window.UI.updateUIAfterRecordingStopped();
             
             console.log('Recording stopped');
         } catch (error) {
-            ErrorHandler.handleError(error, {
-                context: 'recorder:stop',
-                severity: ErrorHandler.ErrorSeverity.ERROR
-            });
+            console.error('Error stopping recording:', error);
+            window.UI.showToast('Error stopping recording', 'error');
         }
     } else {
         try {
             // Start recording
-            await AudioRecorder.startRecording();
+            await window.AudioRecorder.startRecording();
             
             // Update UI
-            UI.updateUIAfterRecordingStarted();
+            window.UI.updateUIAfterRecordingStarted();
             
             console.log('Recording started');
         } catch (error) {
-            ErrorHandler.handleError(error, {
-                context: 'recorder:start',
-                severity: ErrorHandler.ErrorSeverity.ERROR
-            });
+            console.error('Error starting recording:', error);
+            window.UI.showToast('Error starting recording: ' + (error.message || 'Microphone access may be blocked'), 'error');
         }
     }
 }
@@ -129,20 +146,28 @@ async function handleRecordButtonClick() {
  * Handle process button click
  */
 async function handleProcessButtonClick() {
+    console.log('Process button clicked');
+    
+    if (!window.AudioRecorder) {
+        console.error('AudioRecorder not available');
+        window.UI.showToast('Audio processing not available', 'error');
+        return;
+    }
+    
     // Check if there's audio to process
-    const audioBlob = AudioRecorder.getAudioBlob();
+    const audioBlob = window.AudioRecorder.getAudioBlob();
     
     if (!audioBlob) {
-        UI.showToast('No recording available. Please record a conversation first.', 'error');
+        window.UI.showToast('No recording available. Please record a conversation first.', 'error');
         return;
     }
     
     // Update UI to show processing state
-    UI.updateUIBeforeProcessing();
+    window.UI.updateUIBeforeProcessing();
     
     try {
         // Get profile data for enriched analysis
-        const profileData = ProfileManager.getProfile();
+        const profileData = window.ProfileManager ? window.ProfileManager.getProfile() : {};
         
         // Process the audio through the API
         const analysisData = await window.ApiService.processAudio(audioBlob, profileData);
@@ -151,19 +176,17 @@ async function handleProcessButtonClick() {
         updateAnalysisResults(analysisData);
         
         // Update UI to show completed state
-        UI.updateUIAfterProcessing();
+        window.UI.updateUIAfterProcessing();
         
         // Show success message
-        UI.showToast('Analysis complete!');
+        window.UI.showToast('Analysis complete!');
         
         console.log('Analysis completed');
     } catch (error) {
-        ErrorHandler.handleError(error, {
-            context: 'api:processAudio',
-            severity: ErrorHandler.ErrorSeverity.ERROR
-        });
+        console.error('Error processing audio:', error);
         
-        UI.updateUIAfterProcessingError(error.message);
+        window.UI.updateUIAfterProcessingError(error.message || 'Error processing audio');
+        window.UI.showToast('Error analyzing recording', 'error');
     }
 }
 
@@ -179,44 +202,37 @@ function updateAnalysisResults(data) {
     
     try {
         // Update transcript
-        UI.updateTranscript(data.transcript);
+        window.UI.updateTranscript(data.transcript);
         
         // Update sentiment chart
-        if (data.sentimentTrajectory) {
-            ChartManager.updateSentimentChart(data.sentimentTrajectory);
+        if (data.sentimentTrajectory && window.ChartManager) {
+            window.ChartManager.updateSentimentChart(data.sentimentTrajectory);
         }
         
         // Update topic distribution chart
-        if (data.topicDistribution) {
-            ChartManager.updateTopicChart(data.topicDistribution);
+        if (data.topicDistribution && window.ChartManager) {
+            window.ChartManager.updateTopicChart(data.topicDistribution);
         }
         
         // Update pain points chart
-        if (data.painPoints) {
-            ChartManager.updatePainPointsChart(data.painPoints);
+        if (data.painPoints && window.ChartManager) {
+            window.ChartManager.updatePainPointsChart(data.painPoints);
         }
         
         // Update budget estimation
         if (data.budgetEstimation) {
-            UI.updateBudgetEstimation(data.budgetEstimation);
+            window.UI.updateBudgetEstimation(data.budgetEstimation);
         }
         
         // Update key insights
         if (data.keyInsights) {
-            UI.updateKeyInsights(data.keyInsights);
+            window.UI.updateKeyInsights(data.keyInsights);
         }
     } catch (error) {
-        ErrorHandler.handleError(error, {
-            context: 'updateAnalysisResults',
-            severity: ErrorHandler.ErrorSeverity.WARNING,
-            silent: true
-        });
+        console.error('Error updating analysis results:', error);
     }
 }
 
-// Initialize the app when the DOM is loaded
-document.addEventListener('DOMContentLoaded', initializeApp);
-
-// For backward compatibility
+// Expose these functions globally for HTML event handlers
 window.handleRecordButtonClick = handleRecordButtonClick;
 window.handleProcessButtonClick = handleProcessButtonClick;
