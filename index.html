@@ -87,6 +87,7 @@
                             <button 
                                 id="recordButton"
                                 class="px-6 py-2.5 rounded-full font-medium text-white earworm-gradient shadow-lg animated-button transition-all duration-300 hover:shadow-xl flex items-center"
+                                onclick="handleRecordButtonClick()"
                             >
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
@@ -100,6 +101,7 @@
                                 id="processButton"
                                 class="px-6 py-2.5 rounded-full font-medium text-white bg-gray-400 shadow animated-button transition-all duration-300 hover:shadow-lg opacity-50 cursor-not-allowed flex items-center"
                                 disabled
+                                onclick="handleProcessButtonClick()"
                             >
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -236,7 +238,6 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-    <!-- Load scripts in the correct order - no modules to avoid timing issues -->
     <!-- Core libraries first -->
     <script src="js/errorHandler.js"></script>
     <script src="js/api.js"></script>
@@ -256,5 +257,6 @@
     <script src="js/react-components.js"></script>
 
     <!-- App initialization must come last -->
-    <script src="js/app.js"></script></body>
+    <script src="js/app.js"></script>
+</body>
 </html>
