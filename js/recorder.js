@@ -1,4 +1,4 @@
-// recorder.js
+// recorder.js - FIXED VERSION
 // State variables
 let mediaRecorder = null;
 let audioChunks = [];
@@ -9,7 +9,7 @@ let stream = null;
 /**
  * Initialize the audio recorder
  */
-export function initialize() {
+function initialize() {
     console.log('Audio recorder initialized');
 }
 
@@ -17,7 +17,7 @@ export function initialize() {
  * Start recording audio
  * @returns {Promise} A promise that resolves when recording starts
  */
-export async function startRecording() {
+async function startRecording() {
     try {
         // Request microphone access
         stream = await navigator.mediaDevices.getUserMedia({ 
@@ -48,7 +48,7 @@ export async function startRecording() {
             audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             
             // Stop visualization
-            if (typeof window.AudioVisualizer !== 'undefined') {
+            if (window.AudioVisualizer) {
                 window.AudioVisualizer.stopVisualization();
             }
             
@@ -65,7 +65,7 @@ export async function startRecording() {
         mediaRecorder.start(1000); // Collect data every second
         
         // Start visualization with the stream
-        if (typeof window.AudioVisualizer !== 'undefined') {
+        if (window.AudioVisualizer) {
             window.AudioVisualizer.startVisualization(stream);
         }
         
@@ -82,7 +82,7 @@ export async function startRecording() {
  * Stop recording audio
  * @returns {Promise} A promise that resolves when recording stops
  */
-export function stopRecording() {
+function stopRecording() {
     return new Promise((resolve, reject) => {
         if (mediaRecorder && recording) {
             try {
@@ -107,7 +107,7 @@ export function stopRecording() {
  * Check if currently recording
  * @returns {boolean} Whether recording is in progress
  */
-export function isRecording() {
+function isRecording() {
     return recording;
 }
 
@@ -115,7 +115,7 @@ export function isRecording() {
  * Get the recorded audio blob
  * @returns {Blob} The recorded audio blob
  */
-export function getAudioBlob() {
+function getAudioBlob() {
     return audioBlob;
 }
 
@@ -123,7 +123,7 @@ export function getAudioBlob() {
  * Create an audio URL for the recorded audio
  * @returns {string} The audio URL
  */
-export function getAudioURL() {
+function getAudioURL() {
     if (!audioBlob) {
         return null;
     }
@@ -134,11 +134,11 @@ export function getAudioURL() {
  * Get the active media stream
  * @returns {MediaStream} The current media stream
  */
-export function getStream() {
+function getStream() {
     return stream;
 }
 
-// For backward compatibility with code that expects AudioRecorder global
+// IMPORTANT: Make sure these are available globally
 window.AudioRecorder = {
     initialize,
     startRecording,
@@ -148,10 +148,23 @@ window.AudioRecorder = {
     getAudioURL,
     getStream
 };
+
+// Initialize on DOM load - this is crucial
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize on DOM load
-    if (typeof window.AudioRecorder !== 'undefined' && 
-        typeof window.AudioRecorder.initialize === 'function') {
-        window.AudioRecorder.initialize();
-    }
+    // Wait a bit to ensure other scripts have loaded
+    setTimeout(() => {
+        initialize();
+        console.log('AudioRecorder globally available');
+    }, 100);
 });
+
+// Also export for ES modules (for future compatibility)
+export {
+    initialize,
+    startRecording,
+    stopRecording,
+    isRecording,
+    getAudioBlob,
+    getAudioURL,
+    getStream
+};
