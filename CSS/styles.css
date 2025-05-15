@@ -1,55 +1,128 @@
-/* Animation keyframes */
-@keyframes pulse {
-    0% { transform: scale(0.8); opacity: 0.8; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(0.8); opacity: 0.8; }
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+.earworm-primary {
+    background-color: #e83e8c;
 }
 
-@keyframes ripple {
-    0% {
-        transform: scale(0, 0);
-        opacity: 0.5;
-    }
-    20% {
-        transform: scale(25, 25);
-        opacity: 0.3;
-    }
-    100% {
-        opacity: 0;
-        transform: scale(40, 40);
-    }
+.earworm-primary-text {
+    color: #e83e8c;
 }
 
-/* Apply animations to elements */
-.record-dot {
-    animation: pulse 1.5s ease infinite;
+.earworm-secondary {
+    background-color: #6f42c1;
 }
 
-.spinner {
-    animation: spin 1s ease-in-out infinite;
+.earworm-gradient {
+    background: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
 }
 
-/* Hover and transition effects */
 .earworm-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.animated-button {
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
 }
 
-/* Toast notifications */
-.toast {
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+.earworm-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-.toast.show {
-    opacity: 1;
-    transform: translateY(0);
+.record-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #e83e8c;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(232, 62, 140, 0.2);
+    border-radius: 50%;
+    border-top-color: #e83e8c;
+    margin-right: 10px;
+}
+
+.transcript-container {
+    max-height: 400px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Waveform */
+.waveform {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    gap: 3px;
+}
+
+.waveform-bar {
+    width: 3px;
+    background-color: rgba(232, 62, 140, 0.7);
+    border-radius: 3px;
+    transition: height 0.2s ease;
+}
+
+/* Logo styling */
+.logo-segment {
+    fill: #e83e8c;
+    transform-origin: center;
+    transition: all 0.3s ease;
+}
+
+.logo-segment:hover {
+    fill: #6f42c1;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(232, 62, 140, 0.5);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(232, 62, 140, 0.8);
+}
+
+/* Button animations */
+.animated-button {
+    position: relative;
+    overflow: hidden;
+}
+
+.animated-button:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.animated-button:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
 }
