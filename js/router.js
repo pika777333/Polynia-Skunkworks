@@ -1,282 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EARWORM | Sales Conversation Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/animations.css">
-</head>
-<body>
-    <div class="flex h-screen overflow-hidden bg-gray-50">
-        <!-- Sidebar -->
-        <div class="w-64 h-full bg-white shadow-md transition-all duration-300 z-10">
-            <div class="flex flex-col h-full">
-                <!-- Logo -->
-                <div class="p-6 flex items-center justify-center mb-6">
-                    <div class="flex flex-col items-center">
-                        <div class="logo-container w-40 h-16 mb-1">
-                            <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
-                                <g class="logo-worm">
-                                    <path class="logo-segment" d="M30,30 C40,15 50,45 60,30" stroke-width="10" stroke="#e83e8c" fill="none" />
-                                    <path class="logo-segment" d="M60,30 C70,15 80,45 90,30" stroke-width="10" stroke="#e83e8c" fill="none" />
-                                    <path class="logo-segment" d="M90,30 C100,15 110,45 120,30" stroke-width="10" stroke="#e83e8c" fill="none" />
-                                    <circle class="logo-segment" cx="25" cy="30" r="5" fill="#e83e8c" />
-                                </g>
-                                <text x="30" y="55" font-family="Poppins" font-weight="700" font-size="14" fill="#333">EARWORM</text>
-                            </svg>
-                        </div>
-                        <span class="text-xs text-gray-500">Hear the Future.</span>
-                    </div>
-                </div>
-                
-                <!-- New Navigation -->
-                <nav class="flex-1 px-4 pb-4">
-                    <!-- Dashboard Section -->
-                    <div class="space-y-2 mb-8">
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Main</h3>
-                        <a href="#" class="nav-link flex items-center px-4 py-3 text-sm font-medium text-white rounded-lg earworm-gradient" data-target="dashboard">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                            </svg>
-                            Dashboard
-                        </a>
-                    </div>
-                    
-                    <!-- Metrics Section -->
-                    <div class="space-y-2 mb-8">
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Metrics</h3>
-                        <a href="#" class="nav-link flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100" data-target="metrics">
-                            <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            Performance
-                        </a>
-                        <a href="#" class="nav-link flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100" data-target="metrics">
-                            <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                            Sales History
-                        </a>
-                        <a href="#" class="nav-link flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100" data-target="metrics">
-                            <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Improvement Insights
-                        </a>
-                    </div>
-                    
-                    <!-- User Section -->
-                    <div class="space-y-2">
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">User</h3>
-                        <a href="#" class="nav-link flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100" data-target="user">
-                            <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            Profile
-                        </a>
-                        <a href="#" class="nav-link flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100" data-target="user">
-                            <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
-                            Sales Techniques
-                        </a>
-                        <a href="#" class="nav-link flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100" data-target="user">
-                            <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            Settings
-                        </a>
-                    </div>
-                </nav>
-                
-                <!-- User profile -->
-                <div class="p-4 border-t">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
-                            <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2a8 8 0 00-8 8 1 1 0 001 1h14a1 1 0 001-1 8 8 0 00-8-8z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">Sarah Johnson</p>
-                            <p class="text-xs text-gray-500">Sales Manager</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Main content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-white shadow-sm z-10">
-                <div class="px-6 py-4">
-                    <div class="flex justify-between items-center">
-                        <h1 class="text-2xl font-bold text-gray-800">Sales Conversation Analyzer</h1>
-                        <div class="flex items-center space-x-4">
-                            <button 
-                                id="recordButton"
-                                class="px-6 py-2.5 rounded-full font-medium text-white earworm-gradient shadow-lg animated-button transition-all duration-300 hover:shadow-xl flex items-center"
-                            >
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                                </svg>
-                                Start Recording
-                            </button>
-                            <div id="recordingStatus" class="hidden items-center">
-                                <span class="record-dot"></span> Recording... <span id="recordingTime" class="ml-1 font-medium">00:00</span>
-                            </div>
-                            <button 
-                                id="processButton"
-                                class="px-6 py-2.5 rounded-full font-medium text-white bg-gray-400 shadow animated-button transition-all duration-300 hover:shadow-lg opacity-50 cursor-not-allowed flex items-center"
-                                disabled
-                            >
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                </svg>
-                                Analyze Conversation
-                            </button>
-                            <div id="processingStatus" class="hidden items-center">
-                                <span class="spinner"></span> Processing...
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-            
-            <!-- Dashboard View (original content) -->
-            <div id="dashboardView" class="flex-1 flex flex-col">
-                <!-- Audio visualization -->
-                <div id="waveformContainer" class="px-6 py-3 bg-white shadow-sm hidden">
-                    <div class="waveform" id="audioWaveform">
-                        <!-- Waveform bars will be generated by JS -->
-                    </div>
-                    <div class="flex justify-between items-center mt-2">
-                        <span id="currentTime" class="text-sm text-gray-500">00:00</span>
-                        <div class="flex items-center space-x-4">
-                            <button class="w-8 h-8 rounded-full flex items-center justify-center text-white earworm-primary">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <span id="totalTime" class="text-sm text-gray-500">00:00</span>
-                    </div>
-                </div>
-                
-                <!-- Main Content -->
-                <main class="flex-1 p-6 overflow-auto">
-                    <div class="grid grid-cols-12 gap-6">
-                        <!-- Transcript Panel -->
-                        <div class="col-span-6 bg-white rounded-lg shadow-sm earworm-card overflow-hidden">
-                            <div class="p-4 border-b border-gray-100">
-                                <h2 class="text-lg font-semibold text-gray-800">Conversation Transcript</h2>
-                            </div>
-                            <div id="transcript" class="p-4 transcript-container">
-                                <p class="text-gray-500">Transcript will appear here after recording and analysis.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Sentiment Chart -->
-                        <div class="col-span-6 bg-white rounded-lg shadow-sm earworm-card">
-                            <div class="p-4 border-b border-gray-100">
-                                <h2 class="text-lg font-semibold text-gray-800">Sentiment Trajectory</h2>
-                            </div>
-                            <div class="p-4" style="height: 300px;">
-                                <canvas id="sentimentChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <!-- Topic Distribution -->
-                        <div class="col-span-4 bg-white rounded-lg shadow-sm earworm-card">
-                            <div class="p-4 border-b border-gray-100">
-                                <h2 class="text-lg font-semibold text-gray-800">Topic Distribution</h2>
-                            </div>
-                            <div class="p-4" style="height: 250px;">
-                                <canvas id="topicChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <!-- Pain Points -->
-                        <div class="col-span-4 bg-white rounded-lg shadow-sm earworm-card">
-                            <div class="p-4 border-b border-gray-100">
-                                <h2 class="text-lg font-semibold text-gray-800">Pain Points</h2>
-                            </div>
-                            <div class="p-4" style="height: 250px;">
-                                <canvas id="painPointsChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <!-- Budget Estimation -->
-                        <div class="col-span-4 bg-white rounded-lg shadow-sm earworm-card">
-                            <div class="p-4 border-b border-gray-100">
-                                <h2 class="text-lg font-semibold text-gray-800">Budget Estimation</h2>
-                            </div>
-                            <div class="p-4" style="height: 250px;">
-                                <div class="flex flex-col items-center justify-center h-full">
-                                    <div id="budgetTarget" class="text-4xl font-bold earworm-primary-text">
-                                        $0
-                                    </div>
-                                    <div class="text-sm text-gray-500 mt-2">
-                                        Estimated Target Budget
-                                    </div>
-                                    <div class="w-full mt-6 bg-gray-200 rounded-full h-4">
-                                        <div 
-                                            id="budgetProgressBar"
-                                            class="earworm-gradient h-4 rounded-full" 
-                                            style="width: 0%"
-                                        ></div>
-                                    </div>
-                                    <div class="w-full flex justify-between text-xs mt-1">
-                                        <span id="budgetMin">$0</span>
-                                        <span id="budgetCurrent">Current: $0</span>
-                                        <span id="budgetMax">$0</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Key Insights -->
-                        <div class="col-span-12 bg-white rounded-lg shadow-sm earworm-card">
-                            <div class="p-4 border-b border-gray-100">
-                                <h2 class="text-lg font-semibold text-gray-800">Key Insights</h2>
-                            </div>
-                            <div class="p-4">
-                                <ul id="keyInsights" class="list-disc pl-6 space-y-2">
-                                    <li class="text-gray-500">Insights will appear here after analysis.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </div>
-            
-            <!-- Metrics View (new) -->
-            <div id="metricsView" class="hidden flex-1 overflow-auto">
-                <!-- This will be populated by metrics.js -->
-            </div>
-            
-            <!-- User Profile View (new) -->
-            <div id="userView" class="hidden flex-1 overflow-auto">
-                <!-- This will be populated by user.js -->
-            </div>
-        </div>
-    </div>
+/**
+ * router.js - Simple view router
+ * Handles navigation between different views in the application
+ */
 
-    <!-- Scripts -->
-    <script src="js/ui.js"></script>
-    <script src="js/charts.js"></script>
-    <script src="js/visualizer.js"></script>
-    <script src="js/recorder.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/router.js"></script>
-    <script src="js/metrics.js"></script>
-    <script src="js/user.js"></script>
-    <script src="js/app.js"></script>
-</body>
-</html>
+const Router = (function() {
+    // State variables
+    let currentView = 'dashboard';
+    let navLinks = [];
+    
+    /**
+     * Initialize the router
+     */
+    function initialize() {
+        // Cache all navigation links
+        navLinks = document.querySelectorAll('.nav-link');
+        
+        // Add click handlers to all navigation links
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('data-target');
+                navigateTo(target);
+            });
+        });
+        
+        console.log('Router initialized');
+    }
+    
+    /**
+     * Navigate to a specific view
+     * @param {string} view - The view to navigate to
+     */
+    function navigateTo(view) {
+        // Don't do anything if this is already the current view
+        if (view === currentView) return;
+        
+        console.log(`Navigating to view: ${view}`);
+        
+        // Update active state in navigation
+        navLinks.forEach(link => {
+            const linkTarget = link.getAttribute('data-target');
+            
+            if (linkTarget === view) {
+                link.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                link.classList.add('earworm-gradient', 'text-white');
+            } else {
+                link.classList.remove('earworm-gradient', 'text-white');
+                link.classList.add('text-gray-700', 'hover:bg-gray-100');
+            }
+        });
+        
+        // Hide all views
+        document.getElementById('dashboardView').classList.add('hidden');
+        document.getElementById('metricsView').classList.add('hidden');
+        document.getElementById('userView').classList.add('hidden');
+        
+        // Show the selected view
+        document.getElementById(`${view}View`).classList.remove('hidden');
+        
+        // Update current view
+        currentView = view;
+        
+        // Initialize the specific view if needed
+        if (view === 'metrics' && typeof MetricsView !== 'undefined') {
+            MetricsView.initialize();
+        } else if (view === 'user' && typeof UserProfile !== 'undefined') {
+            UserProfile.initialize();
+        }
+        
+        // Update main title based on view
+        const pageTitle = document.querySelector('header h1');
+        if (pageTitle) {
+            if (view === 'dashboard') {
+                pageTitle.textContent = 'Sales Conversation Analyzer';
+            } else if (view === 'metrics') {
+                pageTitle.textContent = 'Sales Performance Metrics';
+            } else if (view === 'user') {
+                pageTitle.textContent = 'User Profile';
+            }
+        }
+    }
+    
+    // Public API
+    return {
+        initialize,
+        navigateTo
+    };
+})();
