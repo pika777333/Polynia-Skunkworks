@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize modules
+    // Initialize existing modules
     UI.initialize();
     ChartManager.initialize();
     AudioRecorder.initialize();
@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof AudioVisualizer !== 'undefined') {
         AudioVisualizer.initialize();
     }
+    
+    // Initialize new modules
+    Router.initialize();
     
     // Set up event listeners
     setupEventListeners();
