@@ -50,34 +50,96 @@ const Router = (function() {
             }
         });
         
-        // Hide all views
-        document.getElementById('dashboardView').classList.add('hidden');
-        document.getElementById('metricsView').classList.add('hidden');
-        document.getElementById('userView').classList.add('hidden');
+        // Hide all views with a fade-out effect
+        const currentViewElement = document.getElementById(`${currentView}View`);
         
-        // Show the selected view
-        document.getElementById(`${view}View`).classList.remove('hidden');
-        
-        // Update current view
-        currentView = view;
-        
-        // Initialize the specific view if needed
-        if (view === 'metrics' && typeof MetricsView !== 'undefined') {
-            MetricsView.initialize();
-        } else if (view === 'user' && typeof UserProfile !== 'undefined') {
-            UserProfile.initialize();
-        }
-        
-        // Update main title based on view
+        // Apply transition
+        fadeOut(currentViewElement, () => {
+            // Hide all views
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('metricsView').classList.add('hidden');
+            document.getElementById('userView').classList.add('hidden');
+            
+            // Show the selected view with fade-in effect
+            const newViewElement = document.getElementById(`${view}View`);
+            newViewElement.classList.remove('hidden');
+            fadeIn(newViewElement);
+            
+            // Initialize the specific view if needed
+            if (view === 'metrics') {
+                // If MetricsView is imported as a module
+                if (typeof MetricsView === 'function') {
+                    // It's a React component, content will be handled by the import
+                } else if (typeof window.initializeMetricsView === 'function') {
+                    window.initializeMetricsView();
+                }
+            } else if (view === 'user' && typeof UserProfile !== 'undefined') {
+                UserProfile.initialize();
+            }
+            
+            // Update current view
+            currentView = view;
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+            
+            // Update main title based on view
+            updatePageTitle(view);
+        });
+    }
+    
+    /**
+     * Update the page title based on current view
+     * @param {string} view - The current view
+     */
+    function updatePageTitle(view) {
         const pageTitle = document.querySelector('header h1');
         if (pageTitle) {
             if (view === 'dashboard') {
                 pageTitle.textContent = 'Sales Conversation Analyzer';
             } else if (view === 'metrics') {
-                pageTitle.textContent = 'Sales Performance Metrics';
+                pageTitle.textContent = 'Sales History';
             } else if (view === 'user') {
                 pageTitle.textContent = 'User Profile';
             }
+        }
+    }
+    
+    /**
+     * Fade out an element
+     * @param {HTMLElement} element - The element to fade out
+     * @param {Function} callback - Callback to run after animation
+     */
+    function fadeOut(element, callback) {
+        if (typeof gsap !== 'undefined') {
+            gsap.to(element, {
+                opacity: 0,
+                duration: 0.2,
+                onComplete: callback
+            });
+        } else {
+            // Fallback if GSAP not available
+            element.style.opacity = '0';
+            setTimeout(callback, 200);
+        }
+    }
+    
+    /**
+     * Fade in an element
+     * @param {HTMLElement} element - The element to fade in
+     */
+    function fadeIn(element) {
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo(element, 
+                { opacity: 0 },
+                { opacity: 1, duration: 0.3 }
+            );
+        } else {
+            // Fallback if GSAP not available
+            element.style.opacity = '0';
+            setTimeout(() => {
+                element.style.opacity = '1';
+            }, 10);
         }
     }
     
