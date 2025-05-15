@@ -1,6 +1,6 @@
 /**
- * app.js - Main application file
- * Entry point that initializes and coordinates the application
+ * app.js - Updated main application file
+ * Including AudioVisualizer initialization
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
     UI.initialize();
     ChartManager.initialize();
     AudioRecorder.initialize();
+    
+    // Initialize AudioVisualizer if available
+    if (typeof AudioVisualizer !== 'undefined') {
+        AudioVisualizer.initialize();
+    }
     
     // Set up event listeners
     setupEventListeners();
@@ -27,6 +32,11 @@ function setupEventListeners() {
             AudioRecorder.stopRecording()
                 .then(() => {
                     UI.updateUIAfterRecordingStopped();
+                    
+                    // Stop visualization if AudioVisualizer is available
+                    if (typeof AudioVisualizer !== 'undefined') {
+                        AudioVisualizer.stopVisualization();
+                    }
                 })
                 .catch(error => {
                     UI.showToast('Error stopping recording: ' + error.message, 'error');
