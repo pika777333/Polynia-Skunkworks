@@ -71,46 +71,42 @@ const Router = (function() {
         };
         
         // User profile view loader
-        viewLoaders.user = function() {
-            return new Promise((resolve, reject) => {
-                try {
-                    // Clear the container first
-                    const userViewElement = document.getElementById('userView');
-                    if (userViewElement) {
-                        userViewElement.innerHTML = '';
-                    }
-                    
-                    // Try to initialize React component
-                    if (typeof window.ReactDOM !== 'undefined' && typeof React !== 'undefined') {
-                        if (typeof window.UserProfile !== 'undefined') {
-                            renderReactComponent('userView', window.UserProfile);
-                            resolve();
-                        } else if (typeof window.initializeUserProfile === 'function') {
-                            window.initializeUserProfile()
-                                .then(() => resolve())
-                                .catch(err => {
-                                    console.error('Failed to initialize UserProfile:', err);
-                                    initializeUserProfileFallback();
-                                    resolve();
-                                });
-                        } else {
-                            // Use the simplified version from user-profile-init.js
-                            renderReactComponent('userView', window.UserProfile || createDefaultUserProfile());
-                            resolve();
-                        }
-                    } else {
-                        // Use non-React fallback
+        // Find this code in router.js (around line 160-190)
+viewLoaders.user = function() {
+    return new Promise((resolve, reject) => {
+        try {
+            // Clear the container first
+            const userViewElement = document.getElementById('userView');
+            if (userViewElement) {
+                userViewElement.innerHTML = '';
+            }
+            
+            // Replace this section with the code below
+            if (typeof window.ReactDOM !== 'undefined' && typeof React !== 'undefined') {
+                // Import the new SimpleProfileCustomizer
+                import('./simple-profile-customizer.js')
+                    .then(module => {
+                        const SimpleProfileCustomizer = module.default;
+                        renderReactComponent('userView', SimpleProfileCustomizer);
+                        resolve();
+                    })
+                    .catch(err => {
+                        console.error('Failed to load SimpleProfileCustomizer:', err);
                         initializeUserProfileFallback();
                         resolve();
-                    }
-                } catch (error) {
-                    console.error('Error initializing User Profile view:', error);
-                    initializeUserProfileFallback();
-                    resolve(); // Resolve even on error to continue navigation
-                }
-            });
-        };
-    }
+                    });
+            } else {
+                // Use non-React fallback
+                initializeUserProfileFallback();
+                resolve();
+            }
+        } catch (error) {
+            console.error('Error initializing User Profile view:', error);
+            initializeUserProfileFallback();
+            resolve(); // Resolve even on error to continue navigation
+        }
+    });
+};
     
     /**
      * Preload a view when hovering over its navigation link
