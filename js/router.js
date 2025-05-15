@@ -1,210 +1,189 @@
-/**
- * simplified-router.js - A streamlined router for Earworm app
- * Replace or enhance your existing router.js with this approach
- */
+// router.js
+// State variables
+let currentView = 'dashboard';
+let isTransitioning = false;
+const validViews = ['dashboard', 'metrics', 'user'];
+const viewCallbacks = new Map();
 
-const EarwormRouter = (function() {
-  // State variables
-  let currentView = 'dashboard';
-  let isTransitioning = false;
-  
-  /**
-   * Initialize the router
-   */
-  function initialize() {
-    console.log('Initializing EarwormRouter...');
+/**
+ * Initialize the router
+ */
+export function initialize() {
+    console.log('Initializing Router...');
     
     // Add click event listeners to all navigation links
     document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = this.getAttribute('data-target');
-        console.log('Navigation clicked:', target);
-        navigateTo(target);
-      });
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            navigateTo(target);
+        });
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', (event) => {
+        const view = event.state?.view || 'dashboard';
+        if (validViews.includes(view)) {
+            navigateTo(view, true); // Skip pushing state when handling popstate
+        }
     });
     
     // Initialize the view specified in the URL hash if present
     const hashView = window.location.hash.substring(1);
-    if (hashView && ['dashboard', 'metrics', 'user'].includes(hashView)) {
-      navigateTo(hashView);
+    if (hashView && validViews.includes(hashView)) {
+        navigateTo(hashView);
+    } else {
+        // Set initial state
+        window.history.replaceState({ view: currentView }, '', `#${currentView}`);
     }
     
-    console.log('EarwormRouter initialized');
-  }
-  
-  /**
-   * Navigate to a specific view
-   * @param {string} view - The view to navigate to ('dashboard', 'metrics', 'user')
-   */
-  function navigateTo(view) {
-    console.log(`Attempting to navigate to: ${view}`);
+    console.log('Router initialized');
+}
+
+/**
+ * Register a callback for a specific view
+ * @param {string} view - The view name
+ * @param {Function} callback - Function to call when view is activated
+ */
+export function registerViewCallback(view, callback) {
+    if (validViews.includes(view) && typeof callback === 'function') {
+        viewCallbacks.set(view, callback);
+    }
+}
+
+/**
+ * Navigate to a specific view
+ * @param {string} view - The view to navigate to
+ * @param {boolean} skipHistory - Skip updating browser history (for popstate)
+ * @returns {Promise<boolean>} Success indicator
+ */
+export async function navigateTo(view, skipHistory = false) {
+    console.log(`Navigating to: ${view}`);
     
     // Validate view name
-    if (!['dashboard', 'metrics', 'user'].includes(view)) {
-      console.error(`Invalid view name: ${view}`);
-      return;
+    if (!validViews.includes(view)) {
+        console.error(`Invalid view name: ${view}`);
+        return false;
     }
     
     // Don't navigate if already on this view or during transition
     if (view === currentView || isTransitioning) {
-      console.log(`Navigation skipped - ${view === currentView ? 'already on view' : 'transition in progress'}`);
-      return;
+        console.log(`Navigation skipped - ${view === currentView ? 'already on view' : 'transition in progress'}`);
+        return false;
     }
     
     // Set transitioning flag
     isTransitioning = true;
-    console.log(`Navigating to view: ${view}`);
     
     try {
-      // Update navigation UI
-      updateNavigation(view);
-      
-      // Update page title
-      updatePageTitle(view);
-      
-      // Hide all views
-      document.querySelectorAll('#dashboardView, #metricsView, #userView').forEach(el => {
-        el.classList.add('hidden');
-      });
-      
-      // Show and initialize target view
-      const viewElement = document.getElementById(`${view}View`);
-      viewElement.classList.remove('hidden');
-      
-      // Initialize view content
-      initializeView(view).then(() => {
+        // Update navigation UI
+        updateNavigation(view);
+        
+        // Update page title
+        updatePageTitle(view);
+        
+        // Hide all views
+        document.querySelectorAll('#dashboardView, #metricsView, #userView').forEach(el => {
+            el.classList.add('hidden');
+        });
+        
+        // Show target view
+        const viewElement = document.getElementById(`${view}View`);
+        if (!viewElement) {
+            throw new Error(`View element #${view}View not found`);
+        }
+        
+        viewElement.classList.remove('hidden');
+        
+        // Run view callback if registered
+        if (viewCallbacks.has(view)) {
+            await viewCallbacks.get(view)();
+        }
+        
+        // Update browser history (unless skipped)
+        if (!skipHistory) {
+            window.history.pushState({ view }, '', `#${view}`);
+        }
+        
         // Update state
         currentView = view;
-        isTransitioning = false;
-        
-        // Update URL hash for bookmarking
-        window.location.hash = view;
         
         console.log(`Navigation to ${view} completed`);
-      }).catch(error => {
-        console.error(`Error initializing view ${view}:`, error);
-        isTransitioning = false;
-      });
+        return true;
     } catch (error) {
-      console.error('Navigation error:', error);
-      isTransitioning = false;
+        console.error('Navigation error:', error);
+        return false;
+    } finally {
+        isTransitioning = false;
     }
-  }
-  
-  /**
-   * Update the active state in navigation
-   * @param {string} activeView - The active view
-   */
-  function updateNavigation(activeView) {
-    document.querySelectorAll('.nav-link').forEach(link => {
-      const linkTarget = link.getAttribute('data-target');
-      
-      if (linkTarget === activeView) {
-        link.classList.remove('text-gray-700', 'hover:bg-gray-100');
-        link.classList.add('earworm-gradient', 'text-white');
-      } else {
-        link.classList.remove('earworm-gradient', 'text-white');
-        link.classList.add('text-gray-700', 'hover:bg-gray-100');
-      }
-    });
-  }
-  
-  /**
-   * Update the page title based on current view
-   * @param {string} view - The current view
-   */
-  function updatePageTitle(view) {
-    const pageTitle = document.querySelector('header h1');
-    if (pageTitle) {
-      if (view === 'dashboard') {
-        pageTitle.textContent = 'Sales Conversation Analyzer';
-      } else if (view === 'metrics') {
-        pageTitle.textContent = 'Sales History';
-      } else if (view === 'user') {
-        pageTitle.textContent = 'User Profile';
-      }
-    }
-  }
-  
-  /**
-   * Initialize a specific view
-   * @param {string} view - The view to initialize
-   * @returns {Promise} A promise that resolves when initialization is complete
-   */
-  function initializeView(view) {
-    return new Promise((resolve, reject) => {
-      try {
-        if (view === 'dashboard') {
-          // Dashboard is typically already initialized
-          resolve();
-        } 
-        else if (view === 'metrics') {
-          if (typeof MetricsView !== 'undefined' && typeof MetricsView.initialize === 'function') {
-            MetricsView.initialize();
-            resolve();
-          } else {
-            console.warn('MetricsView not available, using fallback');
-            const metricsView = document.getElementById('metricsView');
-            if (metricsView && metricsView.innerHTML.trim() === '') {
-              metricsView.innerHTML = '<div class="p-6"><p>Sales metrics loading...</p></div>';
-            }
-            resolve();
-          }
-        }
-        else if (view === 'user') {
-          if (typeof window.ReactDOM !== 'undefined' && typeof React !== 'undefined') {
-            // Try to load the profile component
-            try {
-              if (typeof window.SimpleProfileCustomizer === 'function') {
-                const container = document.getElementById('userView');
-                const root = ReactDOM.createRoot(container);
-                root.render(React.createElement(window.SimpleProfileCustomizer));
-                resolve();
-              } else {
-                throw new Error('SimpleProfileCustomizer not available');
-              }
-            } catch (error) {
-              console.warn('Error initializing React component:', error);
-              // Fallback to basic HTML
-              document.getElementById('userView').innerHTML = `
-                <div class="p-6">
-                  <h2 class="text-xl font-bold mb-4">User Profile</h2>
-                  <div class="bg-white rounded-lg shadow-sm p-4">
-                    <p>Profile information will appear here.</p>
-                  </div>
-                </div>
-              `;
-              resolve();
-            }
-          } else {
-            document.getElementById('userView').innerHTML = `
-              <div class="p-6">
-                <h2 class="text-xl font-bold mb-4">User Profile</h2>
-                <div class="bg-white rounded-lg shadow-sm p-4">
-                  <p>React is not available. Profile cannot be loaded.</p>
-                </div>
-              </div>
-            `;
-            resolve();
-          }
-        }
-      } catch (error) {
-        console.error(`Error in initializeView(${view}):`, error);
-        reject(error);
-      }
-    });
-  }
-  
-  // Public API
-  return {
-    initialize,
-    navigateTo
-  };
-})();
+}
 
-// Auto-initialize when the DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM loaded - initializing router');
-  EarwormRouter.initialize();
-});
+/**
+ * Update the active state in navigation
+ * @param {string} activeView - The active view
+ */
+function updateNavigation(activeView) {
+    document.querySelectorAll('.nav-link').forEach(link => {
+        const linkTarget = link.getAttribute('data-target');
+        
+        if (linkTarget === activeView) {
+            link.classList.remove('text-gray-700', 'hover:bg-gray-100');
+            link.classList.add('earworm-gradient', 'text-white', 'active');
+        } else {
+            link.classList.remove('earworm-gradient', 'text-white', 'active');
+            link.classList.add('text-gray-700', 'hover:bg-gray-100');
+        }
+    });
+}
+
+/**
+ * Update the page title based on current view
+ * @param {string} view - The current view
+ */
+function updatePageTitle(view) {
+    const pageTitle = document.querySelector('header h1');
+    if (!pageTitle) return;
+    
+    const titles = {
+        dashboard: 'Sales Conversation Analyzer',
+        metrics: 'Sales History',
+        user: 'User Profile'
+    };
+    
+    if (titles[view]) {
+        // Use GSAP if available for smooth transition
+        if (typeof gsap !== 'undefined') {
+            gsap.to(pageTitle, {
+                opacity: 0,
+                y: -10,
+                duration: 0.2,
+                onComplete: () => {
+                    pageTitle.textContent = titles[view];
+                    gsap.to(pageTitle, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.3
+                    });
+                }
+            });
+        } else {
+            pageTitle.textContent = titles[view];
+        }
+    }
+}
+
+/**
+ * Get the current view name
+ * @returns {string} Current view name
+ */
+export function getCurrentView() {
+    return currentView;
+}
+
+// For backward compatibility
+window.Router = {
+    initialize,
+    navigateTo,
+    registerViewCallback,
+    getCurrentView
+};
