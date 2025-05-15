@@ -1,27 +1,48 @@
-/**
- * app.js - Main application initialization
- * Connects all components and handles the application lifecycle
- */
+// app.js
+import * as AudioRecorder from './recorder.js';
+import * as AudioVisualizer from './visualizer.js';
+import * as ChartManager from './charts.js';
+import * as Router from './router.js';
+import * as ErrorHandler from './errorHandler.js';
+import { ProfileManager } from './profile.js';
+import * as UI from './ui.js';
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize UI
-    UI.initialize();
+/**
+ * Initialize the application
+ */
+function initializeApp() {
+    console.log('Initializing Earworm application...');
     
-    // Initialize router
-    Router.initialize();
-    
-    // Initialize charts
-    ChartManager.initialize();
-    
-    // Initialize audio components
-    AudioRecorder.initialize();
-    AudioVisualizer.initialize();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    console.log('Application initialized');
-});
+    try {
+        // Initialize UI first so we can display loading states
+        UI.initialize();
+        
+        // Initialize router
+        Router.initialize();
+        
+        // Register view callbacks
+        Router.registerViewCallback('metrics', () => {
+            if (typeof window.MetricsView !== 'undefined') {
+                window.MetricsView.initialize();
+            }
+        });
+        
+        // Initialize core components
+        ChartManager.initialize();
+        AudioRecorder.initialize();
+        AudioVisualizer.initialize();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        console.log('Application initialized successfully');
+    } catch (error) {
+        ErrorHandler.handleError(error, {
+            context: 'app:initialization',
+            severity: ErrorHandler.ErrorSeverity.CRITICAL
+        });
+    }
+}
 
 /**
  * Set up all event listeners for the application
@@ -55,8 +76,10 @@ async function handleRecordButtonClick() {
             
             console.log('Recording stopped');
         } catch (error) {
-            console.error('Error stopping recording:', error);
-            UI.showToast('Error stopping recording: ' + error.message, 'error');
+            ErrorHandler.handleError(error, {
+                context: 'recorder:stop',
+                severity: ErrorHandler.ErrorSeverity.ERROR
+            });
         }
     } else {
         try {
@@ -68,8 +91,10 @@ async function handleRecordButtonClick() {
             
             console.log('Recording started');
         } catch (error) {
-            console.error('Error starting recording:', error);
-            UI.showToast('Error starting recording: ' + error.message, 'error');
+            ErrorHandler.handleError(error, {
+                context: 'recorder:start',
+                severity: ErrorHandler.ErrorSeverity.ERROR
+            });
         }
     }
 }
@@ -90,8 +115,11 @@ async function handleProcessButtonClick() {
     UI.updateUIBeforeProcessing();
     
     try {
+        // Get profile data for enriched analysis
+        const profileData = ProfileManager.getProfile();
+        
         // Process the audio through the API
-        const analysisData = await ApiService.processAudio(audioBlob);
+        const analysisData = await window.ApiService.processAudio(audioBlob, profileData);
         
         // Update charts and UI with the analysis data
         updateAnalysisResults(analysisData);
@@ -102,11 +130,14 @@ async function handleProcessButtonClick() {
         // Show success message
         UI.showToast('Analysis complete!');
         
-        console.log('Analysis completed:', analysisData);
+        console.log('Analysis completed');
     } catch (error) {
-        console.error('Error processing audio:', error);
+        ErrorHandler.handleError(error, {
+            context: 'api:processAudio',
+            severity: ErrorHandler.ErrorSeverity.ERROR
+        });
+        
         UI.updateUIAfterProcessingError(error.message);
-        UI.showToast('Error processing audio: ' + error.message, 'error');
     }
 }
 
@@ -120,31 +151,46 @@ function updateAnalysisResults(data) {
         return;
     }
     
-    // Update transcript
-    UI.updateTranscript(data.transcript);
-    
-    // Update sentiment chart
-    if (data.sentimentTrajectory) {
-        ChartManager.updateSentimentChart(data.sentimentTrajectory);
-    }
-    
-    // Update topic distribution chart
-    if (data.topicDistribution) {
-        ChartManager.updateTopicChart(data.topicDistribution);
-    }
-    
-    // Update pain points chart
-    if (data.painPoints) {
-        ChartManager.updatePainPointsChart(data.painPoints);
-    }
-    
-    // Update budget estimation
-    if (data.budgetEstimation) {
-        UI.updateBudgetEstimation(data.budgetEstimation);
-    }
-    
-    // Update key insights
-    if (data.keyInsights) {
-        UI.updateKeyInsights(data.keyInsights);
+    try {
+        // Update transcript
+        UI.updateTranscript(data.transcript);
+        
+        // Update sentiment chart
+        if (data.sentimentTrajectory) {
+            ChartManager.updateSentimentChart(data.sentimentTrajectory);
+        }
+        
+        // Update topic distribution chart
+        if (data.topicDistribution) {
+            ChartManager.updateTopicChart(data.topicDistribution);
+        }
+        
+        // Update pain points chart
+        if (data.painPoints) {
+            ChartManager.updatePainPointsChart(data.painPoints);
+        }
+        
+        // Update budget estimation
+        if (data.budgetEstimation) {
+            UI.updateBudgetEstimation(data.budgetEstimation);
+        }
+        
+        // Update key insights
+        if (data.keyInsights) {
+            UI.updateKeyInsights(data.keyInsights);
+        }
+    } catch (error) {
+        ErrorHandler.handleError(error, {
+            context: 'updateAnalysisResults',
+            severity: ErrorHandler.ErrorSeverity.WARNING,
+            silent: true
+        });
     }
 }
+
+// Initialize the app when the DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+// For backward compatibility
+window.handleRecordButtonClick = handleRecordButtonClick;
+window.handleProcessButtonClick = handleProcessButtonClick;
