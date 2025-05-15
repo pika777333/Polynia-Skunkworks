@@ -21,7 +21,11 @@ function initializeReactComponent(containerId, Component) {
     // Import necessary React libraries if not already available
     try {
         if (typeof ReactDOM === 'undefined') {
-            console.error('ReactDOM is not available');
+            console.error('ReactDOM is not available, using fallback initialization');
+            // For metrics view, initialize using standard JS
+            if (containerId === 'metricsView' && typeof MetricsView !== 'undefined') {
+                MetricsView.initialize();
+            }
             return;
         }
         
@@ -40,58 +44,45 @@ function initializeReactComponent(containerId, Component) {
     } catch (error) {
         console.error('Error initializing React component:', error);
         
-        // Fallback to HTML content if React fails
-        container.innerHTML = `
-            <div class="p-6">
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Sales History</h2>
-                    <p class="text-gray-600">View your recent sales transactions and performance metrics.</p>
-                    
-                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-medium text-gray-800">Recent Transactions</h3>
-                                <p class="text-sm text-gray-500">Last 30 days</p>
-                            </div>
-                            <div class="text-xl font-bold text-green-600">$78,250</div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <h3 class="font-medium text-gray-800 mb-2">Performance Overview</h3>
-                        <div class="space-y-2">
-                            <div>
-                                <div class="flex justify-between mb-1">
-                                    <span class="text-sm">Closed Deals</span>
-                                    <span class="text-sm font-medium">72%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-500 h-2 rounded-full" style="width: 72%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between mb-1">
-                                    <span class="text-sm">Target Progress</span>
-                                    <span class="text-sm font-medium">85%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="earworm-gradient h-2 rounded-full" style="width: 85%"></div>
-                                </div>
-                            </div>
-                        </div>
+        // Fallback initialization for metrics view
+        if (containerId === 'metricsView' && typeof MetricsView !== 'undefined') {
+            MetricsView.initialize();
+        } else {
+            // Generic fallback content
+            container.innerHTML = `
+                <div class="p-6">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Content Unavailable</h2>
+                        <p class="text-gray-600">There was an issue loading this content.</p>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
 }
 
-// Initialize the metrics view with React
+// Initialize the metrics view
 function initializeMetricsView() {
-    if (typeof MetricsView !== 'undefined') {
-        initializeReactComponent('metricsView', MetricsView);
+    // Try to use the MetricsView standard JS module
+    if (typeof MetricsView !== 'undefined' && typeof MetricsView.initialize === 'function') {
+        MetricsView.initialize();
+    } else if (typeof window.MetricsView !== 'undefined') {
+        // Try React version as fallback
+        initializeReactComponent('metricsView', window.MetricsView);
     } else {
-        console.error('MetricsView component not found');
+        console.error('No valid MetricsView component found');
+        // Create basic fallback content
+        const container = document.getElementById('metricsView');
+        if (container) {
+            container.innerHTML = `
+                <div class="p-6">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Sales History</h2>
+                        <p class="text-gray-600">Unable to load sales history data. Please try again later.</p>
+                    </div>
+                </div>
+            `;
+        }
     }
 }
 
