@@ -148,3 +148,10 @@ window.AudioRecorder = {
     getAudioURL,
     getStream
 };
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize on DOM load
+    if (typeof window.AudioRecorder !== 'undefined' && 
+        typeof window.AudioRecorder.initialize === 'function') {
+        window.AudioRecorder.initialize();
+    }
+});
