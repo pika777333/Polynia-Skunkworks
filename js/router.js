@@ -67,10 +67,12 @@ const Router = (function() {
             
             // Initialize the specific view if needed
             if (view === 'metrics') {
-                // If MetricsView is imported as a module
-                if (typeof MetricsView === 'function') {
-                    // It's a React component, content will be handled by the import
-                } else if (typeof window.initializeMetricsView === 'function') {
+                // First check if native JS module exists
+                if (typeof MetricsView !== 'undefined' && typeof MetricsView.initialize === 'function') {
+                    MetricsView.initialize();
+                }
+                // Then try window functions 
+                else if (typeof window.initializeMetricsView === 'function') {
                     window.initializeMetricsView();
                 }
             } else if (view === 'user' && typeof UserProfile !== 'undefined') {
