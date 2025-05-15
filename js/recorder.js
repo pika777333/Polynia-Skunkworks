@@ -1,4 +1,7 @@
-// recorder.js - FIXED VERSION
+/**
+ * recorder.js - Audio recording functionality
+ */
+
 // State variables
 let mediaRecorder = null;
 let audioChunks = [];
@@ -149,7 +152,7 @@ window.AudioRecorder = {
     getStream
 };
 
-// Initialize on DOM load - this is crucial
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
     // Wait a bit to ensure other scripts have loaded
     setTimeout(() => {
@@ -157,14 +160,3 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('AudioRecorder globally available');
     }, 100);
 });
-
-// Also export for ES modules (for future compatibility)
-export {
-    initialize,
-    startRecording,
-    stopRecording,
-    isRecording,
-    getAudioBlob,
-    getAudioURL,
-    getStream
-};
