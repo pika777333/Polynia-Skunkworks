@@ -1,5 +1,4 @@
-// router.js
-// State variables
+// router.js - FIXED VERSION
 // State variables
 let currentView = 'dashboard';
 let isTransitioning = false;
@@ -9,7 +8,7 @@ const viewCallbacks = new Map();
 /**
  * Initialize the router
  */
-export function initialize() {
+function initialize() {
     console.log('Initializing Router...');
     
     // Add click event listeners to all navigation links
@@ -46,7 +45,7 @@ export function initialize() {
  * @param {string} view - The view name
  * @param {Function} callback - Function to call when view is activated
  */
-export function registerViewCallback(view, callback) {
+function registerViewCallback(view, callback) {
     if (validViews.includes(view) && typeof callback === 'function') {
         viewCallbacks.set(view, callback);
     }
@@ -58,7 +57,7 @@ export function registerViewCallback(view, callback) {
  * @param {boolean} skipHistory - Skip updating browser history (for popstate)
  * @returns {Promise<boolean>} Success indicator
  */
-export async function navigateTo(view, skipHistory = false) {
+async function navigateTo(view, skipHistory = false) {
     console.log(`Navigating to: ${view}`);
     
     // Validate view name
@@ -177,12 +176,20 @@ function updatePageTitle(view) {
  * Get the current view name
  * @returns {string} Current view name
  */
-export function getCurrentView() {
+function getCurrentView() {
     return currentView;
 }
 
-// For backward compatibility
+// IMPORTANT: Make global before DOMContentLoaded
 window.Router = {
+    initialize,
+    navigateTo,
+    registerViewCallback,
+    getCurrentView
+};
+
+// Export for module compatibility
+export {
     initialize,
     navigateTo,
     registerViewCallback,
