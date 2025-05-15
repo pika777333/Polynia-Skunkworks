@@ -8,7 +8,7 @@ const ApiService = (function() {
     const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/pj83qpi1fbz2eo7jhe0x3c317b8vuhta';
     
     // Set to false for development (use mock data) or true for production
-    const USE_PRODUCTION_API = false;
+    const USE_PRODUCTION_API = true;
     
     /**
      * Process audio data through the Make.com webhook
