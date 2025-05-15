@@ -126,3 +126,39 @@ body {
 .animated-button:focus:not(:active)::after {
     animation: ripple 1s ease-out;
 }
+/* Add these styles to css/styles.css */
+
+/* Ensure all view containers have proper scrolling */
+#dashboardView, #metricsView, #userView {
+    height: 100%;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Ensure the main content area scrolls properly */
+.flex-1.flex.flex-col.overflow-hidden > div {
+    overflow-y: auto;
+}
+
+/* Additional scroll improvements */
+.user-profile-container, 
+.metrics-container {
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 2rem; /* Add some bottom padding for better scrolling experience */
+}
+
+/* Improve card styling */
+.earworm-card {
+    transition: all 0.3s ease;
+}
+
+.earworm-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Make tables scroll horizontally on smaller screens */
+.overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+}
