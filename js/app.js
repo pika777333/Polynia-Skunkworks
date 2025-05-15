@@ -1,5 +1,6 @@
 /**
- * app.js - Main application initialization
+ * app.js - PRODUCTION VERSION
+ * Main application initialization and control
  */
 
 document.addEventListener('DOMContentLoaded', initializeApp);
@@ -8,26 +9,32 @@ document.addEventListener('DOMContentLoaded', initializeApp);
  * Initialize the application
  */
 function initializeApp() {
-    console.log('Initializing Earworm application...');
+    console.log('Initializing Earworm application in PRODUCTION mode...');
     
     try {
         // Initialize UI first so we can display loading states
         if (window.UI) {
             window.UI.initialize();
+            console.log('UI module initialized');
         } else {
             console.error("UI module not found");
+            alert("Critical error: UI module not found. Please refresh the page.");
             return;
         }
         
-        // Check for ApiService and initialize if not already done
-        if (!window.ApiService) {
-            console.error("ApiService module not found - creating fallback");
-            createFallbackApiService();
+        // Initialize API Service
+        if (window.ApiService) {
+            window.ApiService.initialize();
+            console.log('API Service initialized');
+        } else {
+            console.error("ApiService module not found - creating emergency fallback");
+            createEmergencyApiService();
         }
         
         // Initialize router if available
         if (window.Router) {
             window.Router.initialize();
+            console.log('Router initialized');
             
             // Register view callbacks
             window.Router.registerViewCallback('metrics', () => {
@@ -38,7 +45,6 @@ function initializeApp() {
             
             // Register user view callback
             window.Router.registerViewCallback('user', () => {
-                // Initialize the React component for user profile
                 if (typeof window.initializeReactComponent === 'function') {
                     window.initializeReactComponent('userView', window.UserProfile);
                 }
@@ -48,19 +54,26 @@ function initializeApp() {
         }
         
         // Initialize core components with availability checks
-        if (window.ChartManager && typeof window.ChartManager.initialize === 'function') {
+        if (window.ChartManager) {
             window.ChartManager.initialize();
+            console.log('Chart manager initialized');
         } else {
-            console.warn("ChartManager not found - charts may not display");
+            console.error("ChartManager not found - charts will not display");
         }
         
-        if (!window.AudioRecorder) {
-            console.error("AudioRecorder module not found - creating fallback");
-            createFallbackAudioRecorder();
+        if (window.AudioRecorder) {
+            window.AudioRecorder.initialize();
+            console.log('Audio recorder initialized');
+        } else {
+            console.error("AudioRecorder module not found - creating emergency fallback");
+            createEmergencyAudioRecorder();
         }
         
-        if (window.AudioVisualizer && typeof window.AudioVisualizer.initialize === 'function') {
+        if (window.AudioVisualizer) {
             window.AudioVisualizer.initialize();
+            console.log('Audio visualizer initialized');
+        } else {
+            console.warn("AudioVisualizer not found - visualization will not be available");
         }
         
         // Setup event listeners
@@ -68,8 +81,8 @@ function initializeApp() {
         
         console.log('Application initialized successfully');
     } catch (error) {
-        console.error('Error during initialization:', error);
-        alert('Error initializing application. Check console for details.');
+        console.error('Critical error during initialization:', error);
+        alert('Error initializing application. Please refresh the page and try again.');
     }
 }
 
@@ -82,7 +95,12 @@ function setupEventListeners() {
     // Record button click handler
     const recordButton = document.getElementById('recordButton');
     if (recordButton) {
-        recordButton.addEventListener('click', handleRecordButtonClick);
+        // Remove any existing listeners to avoid duplicates
+        const newButton = recordButton.cloneNode(true);
+        recordButton.parentNode.replaceChild(newButton, recordButton);
+        
+        // Add new listener
+        newButton.addEventListener('click', handleRecordButtonClick);
         console.log('Record button event listener attached');
     } else {
         console.error('Record button not found');
@@ -91,7 +109,12 @@ function setupEventListeners() {
     // Process button click handler
     const processButton = document.getElementById('processButton');
     if (processButton) {
-        processButton.addEventListener('click', handleProcessButtonClick);
+        // Remove any existing listeners to avoid duplicates
+        const newButton = processButton.cloneNode(true);
+        processButton.parentNode.replaceChild(newButton, processButton);
+        
+        // Add new listener
+        newButton.addEventListener('click', handleProcessButtonClick);
         console.log('Process button event listener attached');
     } else {
         console.error('Process button not found');
@@ -99,7 +122,12 @@ function setupEventListeners() {
     
     // Nav links
     document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', function(e) {
+        // Remove any existing listeners to avoid duplicates
+        const newLink = link.cloneNode(true);
+        link.parentNode.replaceChild(newLink, link);
+        
+        // Add new listener
+        newLink.addEventListener('click', function(e) {
             e.preventDefault();
             const target = this.getAttribute('data-target');
             if (window.Router && window.Router.navigateTo) {
@@ -107,16 +135,21 @@ function setupEventListeners() {
             }
         });
     });
+    
+    console.log("All event listeners set up successfully");
 }
 
 /**
- * Create a fallback API Service if the real one is missing
+ * Create an emergency API Service if the real one is missing
  */
-function createFallbackApiService() {
+function createEmergencyApiService() {
     window.ApiService = {
+        initialize: function() {
+            console.log("Emergency ApiService initialized");
+        },
         processAudio: function(audioBlob) {
             return new Promise((resolve) => {
-                console.log("Using fallback API Service with mock data");
+                console.log("Using emergency API Service with mock data");
                 setTimeout(() => {
                     resolve({
                         transcript: [
@@ -168,28 +201,68 @@ function createFallbackApiService() {
             });
         }
     };
-    console.log("Fallback ApiService created");
+    console.log("Emergency ApiService created");
 }
 
 /**
- * Create a fallback Audio Recorder if the real one is missing
+ * Create an emergency Audio Recorder if the real one is missing
  */
-function createFallbackAudioRecorder() {
+function createEmergencyAudioRecorder() {
+    let mockRecording = false;
+    let mockTimerInterval = null;
+    let mockStartTime = 0;
+    
     window.AudioRecorder = {
-        isRecording: () => false,
+        initialize: function() {
+            console.log("Emergency AudioRecorder initialized");
+        },
+        isRecording: function() {
+            return mockRecording;
+        },
         startRecording: function() {
-            console.log("Using fallback recording (mock)");
+            console.log("Using emergency recording (mock)");
+            mockRecording = true;
+            mockStartTime = Date.now();
+            
+            // Start mock timer
+            mockTimerInterval = setInterval(() => {
+                const elapsedSeconds = Math.floor((Date.now() - mockStartTime) / 1000);
+                const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+                const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+                const timeString = `${minutes}:${seconds}`;
+                
+                // Update time displays
+                const timeElements = [
+                    document.getElementById('recordingTime'),
+                    document.getElementById('currentTime'),
+                    document.getElementById('totalTime')
+                ];
+                
+                timeElements.forEach(element => {
+                    if (element) element.textContent = timeString;
+                });
+            }, 1000);
+            
             return Promise.resolve();
         },
         stopRecording: function() {
-            console.log("Using fallback stop recording (mock)");
+            console.log("Using emergency stop recording (mock)");
+            mockRecording = false;
+            
+            // Clear timer
+            if (mockTimerInterval) {
+                clearInterval(mockTimerInterval);
+                mockTimerInterval = null;
+            }
+            
             return Promise.resolve();
         },
         getAudioBlob: function() {
+            // Create an empty blob
             return new Blob([], { type: 'audio/webm' });
         }
     };
-    console.log("Fallback AudioRecorder created");
+    console.log("Emergency AudioRecorder created");
 }
 
 /**
@@ -223,6 +296,13 @@ async function handleRecordButtonClick() {
                         </svg>
                         Start New Recording
                     `;
+                }
+                
+                // Hide recording status
+                const recordingStatus = document.getElementById('recordingStatus');
+                if (recordingStatus) {
+                    recordingStatus.classList.add('hidden');
+                    recordingStatus.classList.remove('flex');
                 }
                 
                 // Enable process button
@@ -265,6 +345,13 @@ async function handleRecordButtonClick() {
                 if (recordingStatus) {
                     recordingStatus.classList.remove('hidden');
                     recordingStatus.classList.add('flex');
+                }
+                
+                // Show waveform
+                const waveformContainer = document.getElementById('waveformContainer');
+                if (waveformContainer) {
+                    waveformContainer.classList.remove('hidden');
+                    waveformContainer.classList.add('flex', 'flex-col');
                 }
             }
             
@@ -341,7 +428,7 @@ async function handleProcessButtonClick() {
             }
         }
         
-        console.log('Analysis completed');
+        console.log('Analysis completed successfully');
     } catch (error) {
         console.error('Error processing audio:', error);
         
@@ -385,77 +472,154 @@ function updateAnalysisResults(data) {
     
     try {
         // Update transcript
-        const transcriptContainer = document.getElementById('transcript');
-        if (transcriptContainer && data.transcript) {
-            let transcriptHTML = '';
-            data.transcript.forEach(entry => {
-                transcriptHTML += `
-                    <div class="mb-4">
-                        <div class="font-semibold ${entry.speaker === 'Salesperson' ? 'earworm-primary-text' : 'text-green-600'} flex items-center">
-                            ${entry.speaker === 'Salesperson' 
-                                ? '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>'
-                                : '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>'}
-                            ${entry.speaker}
-                        </div>
-                        <div class="mt-1 text-gray-700">${entry.text}</div>
-                    </div>
-                `;
-            });
-            transcriptContainer.innerHTML = transcriptHTML;
-        }
+        updateTranscript(data.transcript);
         
-        // Update charts if available
+        // Initialize charts if they don't exist yet
         if (window.ChartManager) {
             // Update sentiment chart
-            if (data.sentimentTrajectory && window.ChartManager.updateSentimentChart) {
+            if (data.sentimentTrajectory) {
                 window.ChartManager.updateSentimentChart(data.sentimentTrajectory);
             }
             
             // Update topic distribution chart
-            if (data.topicDistribution && window.ChartManager.updateTopicChart) {
+            if (data.topicDistribution) {
                 window.ChartManager.updateTopicChart(data.topicDistribution);
             }
             
             // Update pain points chart
-            if (data.painPoints && window.ChartManager.updatePainPointsChart) {
+            if (data.painPoints) {
                 window.ChartManager.updatePainPointsChart(data.painPoints);
             }
+        } else {
+            console.warn('ChartManager not available, skipping chart updates');
         }
         
         // Update budget estimation
-        if (data.budgetEstimation) {
-            const budgetTarget = document.getElementById('budgetTarget');
-            const budgetMin = document.getElementById('budgetMin');
-            const budgetMax = document.getElementById('budgetMax');
-            const budgetCurrent = document.getElementById('budgetCurrent');
-            const budgetProgressBar = document.getElementById('budgetProgressBar');
-            
-            if (budgetTarget) budgetTarget.textContent = '$' + data.budgetEstimation.target.toLocaleString();
-            if (budgetMin) budgetMin.textContent = '$' + data.budgetEstimation.min.toLocaleString();
-            if (budgetMax) budgetMax.textContent = '$' + data.budgetEstimation.max.toLocaleString();
-            if (budgetCurrent) budgetCurrent.textContent = 'Current: $' + data.budgetEstimation.current.toLocaleString();
-            
-            if (budgetProgressBar) {
-                const percentage = ((data.budgetEstimation.current - data.budgetEstimation.min) / 
-                                   (data.budgetEstimation.max - data.budgetEstimation.min)) * 100;
-                budgetProgressBar.style.width = `${percentage}%`;
-            }
-        }
+        updateBudgetEstimation(data.budgetEstimation);
         
         // Update key insights
-        if (data.keyInsights) {
-            const keyInsights = document.getElementById('keyInsights');
-            if (keyInsights) {
-                let insightsHTML = '';
-                data.keyInsights.forEach(insight => {
-                    insightsHTML += `<li class="text-gray-700">${insight}</li>`;
-                });
-                keyInsights.innerHTML = insightsHTML;
-            }
-        }
+        updateKeyInsights(data.keyInsights);
     } catch (error) {
         console.error('Error updating analysis results:', error);
     }
+}
+
+/**
+ * Update the transcript display
+ * @param {Array} transcript - The transcript data
+ */
+function updateTranscript(transcript) {
+    const transcriptContainer = document.getElementById('transcript');
+    if (!transcriptContainer || !transcript || transcript.length === 0) return;
+    
+    try {
+        let transcriptHTML = '';
+        transcript.forEach(entry => {
+            // Format timestamp
+            const timestamp = entry.timestamp || 0;
+            const seconds = Math.floor(timestamp / 1000);
+            const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const remainingSeconds = (seconds % 60).toString().padStart(2, '0');
+            const timeString = `${minutes}:${remainingSeconds}`;
+            
+            transcriptHTML += `
+                <div class="mb-4">
+                    <div class="font-semibold ${entry.speaker === 'Salesperson' ? 'earworm-primary-text' : 'text-green-600'} flex items-center">
+                        ${entry.speaker === 'Salesperson' 
+                            ? '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>'
+                            : '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>'}
+                        ${entry.speaker} <span class="ml-2 text-gray-400 text-xs">(${timeString})</span>
+                    </div>
+                    <div class="mt-1 text-gray-700">${entry.text}</div>
+                    <div class="mt-1 flex items-center">
+                        <div class="text-xs mr-2">Sentiment:</div>
+                        <div class="w-16 h-2 bg-gray-200 rounded-full">
+                            <div class="h-2 rounded-full" style="width: ${(entry.sentiment + 1) * 50}%; background-color: ${getSentimentColor(entry.sentiment)};"></div>
+                        </div>
+                        <div class="text-xs ml-2" style="color: ${getSentimentColor(entry.sentiment)};">${getSentimentLabel(entry.sentiment)}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        transcriptContainer.innerHTML = transcriptHTML;
+    } catch (error) {
+        console.error('Error updating transcript:', error);
+    }
+}
+
+/**
+ * Update the budget estimation display
+ * @param {Object} budgetData - The budget estimation data
+ */
+function updateBudgetEstimation(budgetData) {
+    if (!budgetData) return;
+    
+    try {
+        const budgetTarget = document.getElementById('budgetTarget');
+        const budgetMin = document.getElementById('budgetMin');
+        const budgetMax = document.getElementById('budgetMax');
+        const budgetCurrent = document.getElementById('budgetCurrent');
+        const budgetProgressBar = document.getElementById('budgetProgressBar');
+        
+        if (budgetTarget) budgetTarget.textContent = '$' + budgetData.target.toLocaleString();
+        if (budgetMin) budgetMin.textContent = '$' + budgetData.min.toLocaleString();
+        if (budgetMax) budgetMax.textContent = '$' + budgetData.max.toLocaleString();
+        if (budgetCurrent) budgetCurrent.textContent = 'Current: $' + budgetData.current.toLocaleString();
+        
+        if (budgetProgressBar) {
+            const percentage = ((budgetData.current - budgetData.min) / 
+                              (budgetData.max - budgetData.min)) * 100;
+            budgetProgressBar.style.width = `${percentage}%`;
+        }
+    } catch (error) {
+        console.error('Error updating budget estimation:', error);
+    }
+}
+
+/**
+ * Update key insights list
+ * @param {Array} insights - The key insights
+ */
+function updateKeyInsights(insights) {
+    if (!insights || insights.length === 0) return;
+    
+    try {
+        const keyInsights = document.getElementById('keyInsights');
+        if (!keyInsights) return;
+        
+        let insightsHTML = '';
+        insights.forEach(insight => {
+            insightsHTML += `<li class="text-gray-700">${insight}</li>`;
+        });
+        keyInsights.innerHTML = insightsHTML;
+    } catch (error) {
+        console.error('Error updating key insights:', error);
+    }
+}
+
+/**
+ * Get color for a sentiment value
+ * @param {number} sentiment - The sentiment value (-1 to 1)
+ * @returns {string} The color hex code
+ */
+function getSentimentColor(sentiment) {
+    if (sentiment >= 0.5) return '#10b981'; // Green
+    if (sentiment >= 0) return '#60a5fa';  // Blue
+    if (sentiment >= -0.5) return '#f59e0b'; // Yellow
+    return '#ef4444'; // Red
+}
+
+/**
+ * Get a label for a sentiment value
+ * @param {number} sentiment - The sentiment value (-1 to 1)
+ * @returns {string} The sentiment label
+ */
+function getSentimentLabel(sentiment) {
+    if (sentiment >= 0.5) return 'Positive';
+    if (sentiment >= 0) return 'Neutral+';
+    if (sentiment >= -0.5) return 'Neutral-';
+    return 'Negative';
 }
 
 // Expose these functions globally for HTML event handlers
