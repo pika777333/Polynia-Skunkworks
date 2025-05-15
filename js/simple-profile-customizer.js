@@ -230,3 +230,5 @@ const SimpleProfileCustomizer = () => {
 };
 
 export default SimpleProfileCustomizer;
+// At the end of simple-profile-customizer.js add:
+window.SimpleProfileCustomizer = SimpleProfileCustomizer;
