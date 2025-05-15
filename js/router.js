@@ -1,5 +1,6 @@
 // router.js
 // State variables
+// State variables
 let currentView = 'dashboard';
 let isTransitioning = false;
 const validViews = ['dashboard', 'metrics', 'user'];
