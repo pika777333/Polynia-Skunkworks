@@ -68,3 +68,11 @@
   
   console.log('User Profile component initialization script loaded');
 })();
+// Add this to the end of user-profile-init.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize user profile when DOM is loaded
+    const userView = document.getElementById('userView');
+    if (userView && typeof window.initializeReactComponent === 'function') {
+        window.initializeReactComponent('userView', window.UserProfile);
+    }
+});
