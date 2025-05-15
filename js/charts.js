@@ -1,5 +1,11 @@
-// charts.js
-// Default options for charts
+/**
+ * charts.js - PRODUCTION VERSION with robust chart initialization
+ */
+
+// Store chart instances for easy access
+const chartInstances = new Map();
+
+// Default options for all charts
 const defaultOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -28,23 +34,57 @@ const defaultOptions = {
     }
 };
 
-// Store chart instances for easy access
-const chartInstances = new Map();
-
 /**
  * Initialize all charts
  */
-export function initialize() {
-    // Set Chart.js defaults
-    Chart.defaults.color = '#64748b';
-    Chart.defaults.font.family = "'Poppins', sans-serif";
+function initialize() {
+    console.log('Initializing charts in PRODUCTION mode');
     
-    // Initialize individual charts
-    initializeSentimentChart();
-    initializeTopicChart();
-    initializePainPointsChart();
-    
-    console.log('Charts initialized');
+    try {
+        // Set global Chart.js defaults
+        if (typeof Chart !== 'undefined') {
+            Chart.defaults.color = '#64748b';
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+        } else {
+            console.error('Chart.js library not available');
+            return;
+        }
+        
+        // Clear any existing charts
+        destroyAllCharts();
+        
+        // Initialize individual charts
+        initializeSentimentChart();
+        initializeTopicChart();
+        initializePainPointsChart();
+        
+        console.log('Charts initialized successfully');
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+    }
+}
+
+/**
+ * Destroy all existing charts
+ */
+function destroyAllCharts() {
+    try {
+        // Destroy each chart instance
+        chartInstances.forEach((chart, id) => {
+            try {
+                chart.destroy();
+            } catch (e) {
+                console.warn(`Error destroying chart ${id}:`, e);
+            }
+        });
+        
+        // Clear the map
+        chartInstances.clear();
+        
+        console.log('All existing charts cleared');
+    } catch (error) {
+        console.error('Error destroying charts:', error);
+    }
 }
 
 /**
@@ -55,14 +95,29 @@ export function initialize() {
  * @param {Object} options - Chart options
  * @returns {Chart|null} Chart instance or null if error
  */
-export function createChart(id, type, data, options = {}) {
+function createChart(id, type, data, options = {}) {
     try {
         const canvas = document.getElementById(id);
         if (!canvas) {
-            throw new Error(`Canvas element with ID "${id}" not found`);
+            console.error(`Canvas element with ID "${id}" not found`);
+            return null;
         }
         
+        // Check if chart already exists, destroy it first
+        if (chartInstances.has(id)) {
+            try {
+                chartInstances.get(id).destroy();
+            } catch (e) {
+                console.warn(`Error destroying existing chart ${id}:`, e);
+            }
+        }
+        
+        // Get context and check it's valid
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error(`Could not get 2D context for canvas "${id}"`);
+            return null;
+        }
         
         // Merge with default options
         const chartOptions = {
@@ -70,23 +125,55 @@ export function createChart(id, type, data, options = {}) {
             ...options
         };
         
-        // Create and store chart instance
-        const chart = new Chart(ctx, { type, data, options: chartOptions });
+        // Create chart instance
+        const chart = new Chart(ctx, { 
+            type, 
+            data, 
+            options: chartOptions
+        });
+        
+        // Store for later reference
         chartInstances.set(id, chart);
         
         return chart;
     } catch (error) {
-        console.error(`Error creating ${type} chart:`, error);
+        console.error(`Error creating ${type} chart "${id}":`, error);
         
-        // Use ErrorHandler if available
-        if (typeof window.ErrorHandler !== 'undefined') {
-            window.ErrorHandler.handleError(error, {
-                context: `charts:create:${id}`,
-                silent: true
-            });
-        }
+        // Try to render a fallback
+        renderFallbackChart(id, type);
         
         return null;
+    }
+}
+
+/**
+ * Render a fallback for a chart that failed to initialize
+ * @param {string} id - Chart canvas element ID
+ * @param {string} type - The chart type that was attempted
+ */
+function renderFallbackChart(id, type) {
+    try {
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw fallback content
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#666666';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${type} chart will appear here after analysis`, canvas.width / 2, canvas.height / 2);
+        
+        console.log(`Fallback rendered for ${id}`);
+    } catch (e) {
+        console.error(`Error rendering fallback for ${id}:`, e);
     }
 }
 
@@ -95,14 +182,14 @@ export function createChart(id, type, data, options = {}) {
  * @param {string} id - Chart canvas element ID
  * @returns {Chart|null} Chart instance or null if not found
  */
-export function getChart(id) {
+function getChart(id) {
     return chartInstances.get(id) || null;
 }
 
 /**
  * Initialize the sentiment chart
  */
-export function initializeSentimentChart() {
+function initializeSentimentChart() {
     return createChart('sentimentChart', 'line', {
         labels: [],
         datasets: [
@@ -158,7 +245,7 @@ export function initializeSentimentChart() {
 /**
  * Initialize the topic distribution chart
  */
-export function initializeTopicChart() {
+function initializeTopicChart() {
     return createChart('topicChart', 'doughnut', {
         labels: [],
         datasets: [{
@@ -183,7 +270,7 @@ export function initializeTopicChart() {
 /**
  * Initialize the pain points chart
  */
-export function initializePainPointsChart() {
+function initializePainPointsChart() {
     return createChart('painPointsChart', 'bar', {
         labels: [],
         datasets: [{
@@ -221,12 +308,22 @@ export function initializePainPointsChart() {
  * @param {Array} sentimentData - The sentiment trajectory data
  * @returns {boolean} Success indicator
  */
-export function updateSentimentChart(sentimentData) {
+function updateSentimentChart(sentimentData) {
     try {
-        if (!sentimentData || sentimentData.length === 0) return false;
+        if (!sentimentData || sentimentData.length === 0) {
+            console.warn('No sentiment data provided for chart update');
+            return false;
+        }
         
         const chart = getChart('sentimentChart');
-        if (!chart) return false;
+        if (!chart) {
+            console.warn('Sentiment chart not initialized, creating now');
+            const newChart = initializeSentimentChart();
+            if (!newChart) return false;
+            
+            // Try again with the new chart
+            return updateSentimentChart(sentimentData);
+        }
         
         // Format time values to seconds
         const labels = sentimentData.map(entry => Math.floor(entry.time / 1000));
@@ -240,18 +337,10 @@ export function updateSentimentChart(sentimentData) {
         chart.data.datasets[0].data = salespersonData;
         chart.data.datasets[1].data = customerData;
         
-        // Use GSAP for animation if available
-        if (typeof gsap !== 'undefined') {
-            gsap.from(chart.canvas, {
-                opacity: 0.5,
-                duration: 1,
-                ease: "power2.out",
-                onComplete: () => chart.update()
-            });
-        } else {
-            chart.update();
-        }
+        // Update the chart
+        chart.update();
         
+        console.log('Sentiment chart updated successfully');
         return true;
     } catch (error) {
         console.error('Error updating sentiment chart:', error);
@@ -264,12 +353,22 @@ export function updateSentimentChart(sentimentData) {
  * @param {Array} topicData - The topic distribution data
  * @returns {boolean} Success indicator
  */
-export function updateTopicChart(topicData) {
+function updateTopicChart(topicData) {
     try {
-        if (!topicData || topicData.length === 0) return false;
+        if (!topicData || topicData.length === 0) {
+            console.warn('No topic data provided for chart update');
+            return false;
+        }
         
         const chart = getChart('topicChart');
-        if (!chart) return false;
+        if (!chart) {
+            console.warn('Topic chart not initialized, creating now');
+            const newChart = initializeTopicChart();
+            if (!newChart) return false;
+            
+            // Try again with the new chart
+            return updateTopicChart(topicData);
+        }
         
         // Get labels and values
         const labels = topicData.map(entry => entry.name);
@@ -279,19 +378,10 @@ export function updateTopicChart(topicData) {
         chart.data.labels = labels;
         chart.data.datasets[0].data = values;
         
-        // Use GSAP for animation if available
-        if (typeof gsap !== 'undefined') {
-            gsap.from(chart.canvas, {
-                opacity: 0.5,
-                scale: 0.95,
-                duration: 1,
-                ease: "elastic.out(1, 0.5)",
-                onComplete: () => chart.update()
-            });
-        } else {
-            chart.update();
-        }
+        // Update the chart
+        chart.update();
         
+        console.log('Topic chart updated successfully');
         return true;
     } catch (error) {
         console.error('Error updating topic chart:', error);
@@ -304,12 +394,22 @@ export function updateTopicChart(topicData) {
  * @param {Array} painPointsData - The pain points data
  * @returns {boolean} Success indicator
  */
-export function updatePainPointsChart(painPointsData) {
+function updatePainPointsChart(painPointsData) {
     try {
-        if (!painPointsData || painPointsData.length === 0) return false;
+        if (!painPointsData || painPointsData.length === 0) {
+            console.warn('No pain points data provided for chart update');
+            return false;
+        }
         
         const chart = getChart('painPointsChart');
-        if (!chart) return false;
+        if (!chart) {
+            console.warn('Pain points chart not initialized, creating now');
+            const newChart = initializePainPointsChart();
+            if (!newChart) return false;
+            
+            // Try again with the new chart
+            return updatePainPointsChart(painPointsData);
+        }
         
         // Get categories and scores
         const categories = painPointsData.map(entry => entry.category);
@@ -327,19 +427,10 @@ export function updatePainPointsChart(painPointsData) {
         
         chart.data.datasets[0].backgroundColor = colors;
         
-        // Use GSAP for animation if available
-        if (typeof gsap !== 'undefined') {
-            gsap.from(chart.canvas, {
-                opacity: 0.5,
-                x: 20,
-                duration: 1,
-                ease: "power2.out",
-                onComplete: () => chart.update()
-            });
-        } else {
-            chart.update();
-        }
+        // Update the chart
+        chart.update();
         
+        console.log('Pain points chart updated successfully');
         return true;
     } catch (error) {
         console.error('Error updating pain points chart:', error);
@@ -350,7 +441,7 @@ export function updatePainPointsChart(painPointsData) {
 /**
  * Reset all charts to their initial empty state
  */
-export function resetCharts() {
+function resetCharts() {
     try {
         // Reset Sentiment Chart
         const sentimentChart = getChart('sentimentChart');
@@ -376,12 +467,14 @@ export function resetCharts() {
             painPointsChart.data.datasets[0].data = [];
             painPointsChart.update();
         }
+        
+        console.log('All charts reset to initial state');
     } catch (error) {
         console.error('Error resetting charts:', error);
     }
 }
 
-// For backward compatibility
+// Expose functions globally
 window.ChartManager = {
     initialize,
     resetCharts,
@@ -389,3 +482,15 @@ window.ChartManager = {
     updateTopicChart,
     updatePainPointsChart
 };
+
+// Initialize charts on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // Wait a short time to ensure Canvas elements are ready
+        setTimeout(() => {
+            initialize();
+        }, 100);
+    } catch (error) {
+        console.error('Error during chart initialization:', error);
+    }
+});
