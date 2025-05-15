@@ -97,6 +97,7 @@ export function ProfileProvider({ children }) {
 }
 
 // Non-React compatibility layer
+// Non-React compatibility layer
 export const ProfileManager = {
     getProfile() {
         try {
