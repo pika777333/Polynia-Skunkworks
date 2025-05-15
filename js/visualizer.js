@@ -1,4 +1,4 @@
-// visualizer.js
+// visualizer.js - FIXED VERSION
 // State variables
 let audioContext = null;
 let analyser = null;
@@ -11,7 +11,7 @@ let waveformBars = [];
 /**
  * Initialize the audio visualizer
  */
-export function initialize() {
+function initialize() {
     waveformContainer = document.getElementById('audioWaveform');
     createWaveformBars();
     
@@ -29,7 +29,7 @@ export function initialize() {
  * Check if browser supports visualization
  * @returns {boolean} Whether visualization is supported
  */
-export function isSupported() {
+function isSupported() {
     return !!(window.AudioContext || window.webkitAudioContext);
 }
 
@@ -60,7 +60,7 @@ function createWaveformBars() {
  * Start visualization with a given audio stream
  * @param {MediaStream} stream - The microphone media stream
  */
-export function startVisualization(stream) {
+function startVisualization(stream) {
     if (!stream || !waveformContainer) {
         console.error('No audio stream or container provided for visualization');
         return;
@@ -156,7 +156,7 @@ function visualize() {
 /**
  * Stop the audio visualization
  */
-export function stopVisualization() {
+function stopVisualization() {
     visualizationActive = false;
     
     // Cancel animation frame if active
@@ -179,7 +179,7 @@ export function stopVisualization() {
 /**
  * Clean up resources when finished
  */
-export function cleanup() {
+function cleanup() {
     stopVisualization();
     
     // Close audio context if it exists
@@ -191,7 +191,7 @@ export function cleanup() {
     }
 }
 
-// For backward compatibility
+// Make this available globally BEFORE DOMContentLoaded
 window.AudioVisualizer = {
     initialize,
     isSupported,
@@ -199,10 +199,21 @@ window.AudioVisualizer = {
     stopVisualization,
     cleanup
 };
+
+// Also initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize on DOM load
-    if (typeof window.AudioVisualizer !== 'undefined' && 
-        typeof window.AudioVisualizer.initialize === 'function') {
-        window.AudioVisualizer.initialize();
-    }
+    // Initialize after a small delay to ensure DOM is ready
+    setTimeout(() => {
+        initialize();
+        console.log('AudioVisualizer globally available');
+    }, 100);
 });
+
+// Export for module compatibility
+export {
+    initialize,
+    isSupported,
+    startVisualization,
+    stopVisualization,
+    cleanup
+};
