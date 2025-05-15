@@ -72,27 +72,28 @@ const UserProfile = (function() {
         `;
         grid.appendChild(titleSection);
         
-        // Profile Card - Adjusted to span full width now that stats are removed
-        const profileCard = document.createElement('div');
-        profileCard.className = 'col-span-12 bg-white rounded-lg shadow-sm earworm-card overflow-hidden';
-        profileCard.innerHTML = `
-            <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-32"></div>
-            <div class="px-6 pb-6">
-                <div class="relative">
-                    <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
-                        <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center p-1">
-                            <div class="w-full h-full bg-gray-200 rounded-full overflow-hidden">
-                                <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2a8 8 0 00-8 8 1 1 0 001 1h14a1 1 0 001-1 8 8 0 00-8-8z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-16 text-center">
-                        <h2 class="text-xl font-bold text-gray-800">${userData.name}</h2>
-                        <p class="text-sm text-gray-500">${userData.title}</p>
+       const profileCard = document.createElement('div');
+profileCard.className = 'col-span-12 bg-white rounded-lg shadow-sm earworm-card overflow-hidden';
+profileCard.innerHTML = `
+    <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-32"></div>
+    <div class="px-6 pb-6">
+        <div class="relative">
+            <div class="absolute -top-20 left-1/2 transform -translate-x-1/2">
+                <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center p-1">
+                    <div class="w-full h-full bg-gray-200 rounded-full overflow-hidden">
+                        <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2a8 8 0 00-8 8 1 1 0 001 1h14a1 1 0 001-1 8 8 0 00-8-8z"></path>
+                        </svg>
                     </div>
                 </div>
+            </div>
+            <div class="mt-16 text-center">
+                <h2 class="text-xl font-bold text-gray-800">${userData.name}</h2>
+                <p class="text-sm text-gray-500">${userData.title}</p>
+            </div>
+        </div>
+        
+        <!-- Rest of the profile card content
                 
                 <div class="mt-6 space-y-4">
                     <div class="flex items-center">
