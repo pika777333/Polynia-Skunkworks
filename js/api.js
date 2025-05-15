@@ -1,10 +1,19 @@
-// Enhanced ApiService.js - with profile data integration
+/**
+ * ApiService.js - Updated version with proper initialization and globally exposed interface
+ */
 const ApiService = (function() {
     // Configuration
     const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/pj83qpi1fbz2eo7jhe0x3c317b8vuhta';
     
     // Set to false for development (use mock data) or true for production
-    const USE_PRODUCTION_API = true;
+    const USE_PRODUCTION_API = false; // Using mock data for testing
+    
+    /**
+     * Initialize the API service
+     */
+    function initialize() {
+        console.log('API Service initialized');
+    }
     
     /**
      * Process audio data through the Make.com webhook
@@ -56,10 +65,10 @@ const ApiService = (function() {
                 // For demo purposes, simulate API delay and return mock data
                 console.log('Using mock API response for development (with profile data)');
                 
-                // Generate mock data enhanced with profile information
+                // Simulate API delay
                 setTimeout(() => {
                     resolve(getMockAnalysisData(profileData));
-                }, 3000);
+                }, 1500);
             }
         });
     }
@@ -218,6 +227,18 @@ const ApiService = (function() {
     
     // Public API
     return {
+        initialize,
         processAudio
     };
 })();
+
+// Make sure ApiService is globally accessible
+window.ApiService = ApiService;
+
+// Initialize on DOM content loaded
+document.addEventListener('DOMContentLoaded', function() {
+    if (ApiService && typeof ApiService.initialize === 'function') {
+        ApiService.initialize();
+        console.log('ApiService globally available');
+    }
+});
