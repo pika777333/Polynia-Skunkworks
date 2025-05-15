@@ -78,7 +78,7 @@ profileCard.innerHTML = `
     <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-32"></div>
     <div class="px-6 pb-6">
         <div class="relative">
-            <div class="absolute -top-10 left-1/2 transform -translate-x-1/2">
+            <div class="absolute -top-100 left-1/2 transform -translate-x-1/2">
                 <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center p-1">
                     <div class="w-full h-full bg-gray-200 rounded-full overflow-hidden">
                         <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24">
