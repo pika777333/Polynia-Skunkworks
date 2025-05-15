@@ -6,6 +6,8 @@
 const UserProfile = (function() {
     // DOM elements
     let userContainer;
+    let tabButtons;
+    let activeTab = 'profile';
     
     // User data for demonstration
     const userData = {
@@ -28,23 +30,7 @@ const UserProfile = (function() {
             closedValue: 1250000,
             winRate: 72,
             avgDealSize: 42000
-        },
-        // Added more sales context fields
-        salesContext: {
-            territory: 'Midwest - Metro Area',
-            industries: ['Technology', 'Healthcare', 'Finance'],
-            productExpertise: ['SaaS', 'Cloud Infrastructure', 'Enterprise Solutions'],
-            languages: ['English', 'Spanish'],
-            certifications: ['Certified Sales Professional', 'Solution Selling Methodology'],
-            approachStyle: 'Consultative',
-            closingStyle: 'Value-based'
-        },
-        clients: [
-            { name: 'Acme Corp', industry: 'Technology', relationship: '3 years' },
-            { name: 'MediHealth Inc', industry: 'Healthcare', relationship: '2 years' },
-            { name: 'TechGiant', industry: 'Technology', relationship: '1 year' },
-            { name: 'FinWell Solutions', industry: 'Finance', relationship: '2 years' }
-        ]
+        }
     };
     
     /**
@@ -86,9 +72,9 @@ const UserProfile = (function() {
         `;
         grid.appendChild(titleSection);
         
-        // Profile Card
+        // Profile Card - Adjusted to span full width now that stats are removed
         const profileCard = document.createElement('div');
-        profileCard.className = 'col-span-4 bg-white rounded-lg shadow-sm earworm-card overflow-hidden';
+        profileCard.className = 'col-span-12 bg-white rounded-lg shadow-sm earworm-card overflow-hidden';
         profileCard.innerHTML = `
             <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-32"></div>
             <div class="px-6 pb-6">
@@ -126,7 +112,7 @@ const UserProfile = (function() {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span class="text-sm text-gray-700">${userData.salesContext.territory}</span>
+                        <span class="text-sm text-gray-700">${userData.region} Region</span>
                     </div>
                     <div class="flex items-center">
                         <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,119 +136,13 @@ const UserProfile = (function() {
                         Edit Profile
                     </button>
                 </div>
-            </div>
-        `;
-        
-        // Sales Context - NEW SECTION
-        const salesContextCard = document.createElement('div');
-        salesContextCard.className = 'col-span-8 bg-white rounded-lg shadow-sm earworm-card';
-        salesContextCard.innerHTML = `
-            <div class="p-4 border-b border-gray-100">
-                <h2 class="text-lg font-semibold text-gray-800">Sales Context</h2>
-            </div>
-            <div class="p-4">
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <h3 class="font-medium text-gray-800 mb-2">Industries</h3>
-                        <div class="flex flex-wrap gap-2">
-                            ${userData.salesContext.industries.map(industry => `
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                    ${industry}
-                                </span>
-                            `).join('')}
-                        </div>
-                        
-                        <h3 class="font-medium text-gray-800 mt-4 mb-2">Product Expertise</h3>
-                        <div class="flex flex-wrap gap-2">
-                            ${userData.salesContext.productExpertise.map(product => `
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                                    ${product}
-                                </span>
-                            `).join('')}
-                        </div>
-                        
-                        <h3 class="font-medium text-gray-800 mt-4 mb-2">Languages</h3>
-                        <div class="flex flex-wrap gap-2">
-                            ${userData.salesContext.languages.map(language => `
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                    ${language}
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h3 class="font-medium text-gray-800 mb-2">Sales Style</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-700">Approach:</span>
-                                <span class="text-sm font-medium earworm-primary-text">${userData.salesContext.approachStyle}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-700">Closing:</span>
-                                <span class="text-sm font-medium earworm-primary-text">${userData.salesContext.closingStyle}</span>
-                            </div>
-                        </div>
-                        
-                        <h3 class="font-medium text-gray-800 mt-4 mb-2">Certifications</h3>
-                        <ul class="space-y-2">
-                            ${userData.salesContext.certifications.map(cert => `
-                                <li class="flex items-center text-sm text-gray-700">
-                                    <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    ${cert}
-                                </li>
-                            `).join('')}
-                        </ul>
-                        
-                        <h3 class="font-medium text-gray-800 mt-4 mb-2">Key Clients</h3>
-                        <div class="space-y-2">
-                            ${userData.clients.map(client => `
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="font-medium">${client.name}</span>
-                                    <span class="text-gray-600">${client.industry} • ${client.relationship}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Performance Stats - Kept in profile
-        const statsCard = document.createElement('div');
-        statsCard.className = 'col-span-8 bg-white rounded-lg shadow-sm earworm-card';
-        statsCard.innerHTML = `
-            <div class="p-4 border-b border-gray-100">
-                <h2 class="text-lg font-semibold text-gray-800">Performance Stats</h2>
-            </div>
-            <div class="p-4">
-                <div class="grid grid-cols-4 gap-4 mb-6">
-                    <div class="p-4 bg-indigo-50 rounded-lg">
-                        <div class="text-3xl font-bold text-indigo-600">${userData.stats.deals}</div>
-                        <div class="text-sm text-gray-600">Total Deals</div>
-                    </div>
-                    <div class="p-4 bg-green-50 rounded-lg">
-                        <div class="text-3xl font-bold text-green-600">$${(userData.stats.closedValue / 1000000).toFixed(1)}M</div>
-                        <div class="text-sm text-gray-600">Closed Value</div>
-                    </div>
-                    <div class="p-4 bg-purple-50 rounded-lg">
-                        <div class="text-3xl font-bold text-purple-600">${userData.stats.winRate}%</div>
-                        <div class="text-sm text-gray-600">Win Rate</div>
-                    </div>
-                    <div class="p-4 bg-pink-50 rounded-lg">
-                        <div class="text-3xl font-bold text-pink-600">$${(userData.stats.avgDealSize / 1000).toFixed(1)}k</div>
-                        <div class="text-sm text-gray-600">Avg Deal Size</div>
-                    </div>
-                </div>
                 
-                <div class="mb-4">
+                <div class="mt-6">
                     <h3 class="text-lg font-medium text-gray-800 mb-2">About Me</h3>
                     <p class="text-gray-700">${userData.bio}</p>
                 </div>
                 
-                <div class="mb-4">
+                <div class="mt-6">
                     <h3 class="text-lg font-medium text-gray-800 mb-2">Achievements</h3>
                     <div class="space-y-4">
                         ${userData.achievements.map(achievement => `
@@ -279,55 +159,74 @@ const UserProfile = (function() {
             </div>
         `;
         
-        // Additional Sales Insights - NEW SECTION
-        const insightsCard = document.createElement('div');
-        insightsCard.className = 'col-span-4 bg-white rounded-lg shadow-sm earworm-card';
-        insightsCard.innerHTML = `
+        // Recent Activities
+        const activitiesCard = document.createElement('div');
+        activitiesCard.className = 'col-span-12 bg-white rounded-lg shadow-sm earworm-card';
+        activitiesCard.innerHTML = `
             <div class="p-4 border-b border-gray-100">
-                <h2 class="text-lg font-semibold text-gray-800">Personal Sales Insights</h2>
+                <h2 class="text-lg font-semibold text-gray-800">Recent Activity</h2>
             </div>
             <div class="p-4">
-                <h3 class="font-medium text-gray-800 mb-2">Strengths</h3>
-                <ul class="space-y-2 mb-4">
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 mr-2 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span class="text-sm text-gray-700">Technical product knowledge</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 mr-2 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span class="text-sm text-gray-700">Relationship building with C-level executives</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 mr-2 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span class="text-sm text-gray-700">Custom solution development</span>
-                    </li>
-                </ul>
+                <div class="space-y-4">
+                    <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium">Deal closed with Premier Products</p>
+                            <p class="text-xs text-gray-500">May 12, 2025 at 3:24 PM</p>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">$21,500</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium">Meeting scheduled with TechGiant Inc</p>
+                            <p class="text-xs text-gray-500">May 11, 2025 at 10:15 AM</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-purple-100 text-purple-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium">New call analyzed with Acme Corp</p>
+                            <p class="text-xs text-gray-500">May 10, 2025 at 2:30 PM</p>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">High potential</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-100 text-yellow-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium">Updated proposal for Global Services</p>
+                            <p class="text-xs text-gray-500">May 9, 2025 at 11:45 AM</p>
+                        </div>
+                    </div>
+                </div>
                 
-                <h3 class="font-medium text-gray-800 mb-2">Development Areas</h3>
-                <ul class="space-y-2 mb-4">
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 mr-2 text-orange-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                        <span class="text-sm text-gray-700">Closing high-volume deals</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 mr-2 text-orange-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                        <span class="text-sm text-gray-700">Healthcare industry knowledge</span>
-                    </li>
-                </ul>
-                
-                <h3 class="font-medium text-gray-800 mb-2">Notes for Calls</h3>
-                <div class="p-3 bg-yellow-50 rounded-lg">
-                    <p class="text-sm text-gray-700">Emphasize ROI within first 5 minutes of demo calls. Focus on cost savings for healthcare clients. Highlight security features for financial sector.</p>
+                <div class="mt-4 text-center">
+                    <button class="px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800">
+                        View All Activity
+                    </button>
                 </div>
             </div>
         `;
@@ -436,9 +335,7 @@ const UserProfile = (function() {
         
         // Add all elements to the grid
         grid.appendChild(profileCard);
-        grid.appendChild(salesContextCard);
-        grid.appendChild(statsCard);
-        grid.appendChild(insightsCard);
+        grid.appendChild(activitiesCard);
         grid.appendChild(settingsCard);
         
         // Add the grid to the container
