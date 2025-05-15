@@ -199,3 +199,10 @@ window.AudioVisualizer = {
     stopVisualization,
     cleanup
 };
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize on DOM load
+    if (typeof window.AudioVisualizer !== 'undefined' && 
+        typeof window.AudioVisualizer.initialize === 'function') {
+        window.AudioVisualizer.initialize();
+    }
+});
