@@ -1,11 +1,16 @@
 // app.js
-import * as AudioRecorder from './recorder.js';
-import * as AudioVisualizer from './visualizer.js';
-import * as ChartManager from './charts.js';
+// app.js - Updated imports
+// Import modules that support ES modules
 import * as Router from './router.js';
-import * as ErrorHandler from './errorHandler.js';
+import * as ErrorHandlerModule from './errorHandler.js';
 import { ProfileManager } from './profile.js';
-import * as UI from './ui.js';
+
+// Access global objects for non-module scripts
+const AudioRecorder = window.AudioRecorder;
+const AudioVisualizer = window.AudioVisualizer;
+const ChartManager = window.ChartManager;
+const UI = window.UI;
+const ErrorHandler = window.ErrorHandler || ErrorHandlerModule;
 
 /**
  * Initialize the application
@@ -27,22 +32,43 @@ function initializeApp() {
             }
         });
         
+        // Register user view callback
+        Router.registerViewCallback('user', () => {
+            // Initialize the React component for user profile
+            if (typeof window.initializeReactComponent === 'function') {
+                window.initializeReactComponent('userView', window.UserProfile);
+            }
+        });
+        
         // Initialize core components
-        ChartManager.initialize();
-        AudioRecorder.initialize();
-        AudioVisualizer.initialize();
+        if (ChartManager && ChartManager.initialize) {
+            ChartManager.initialize();
+        }
+        
+        if (AudioRecorder && AudioRecorder.initialize) {
+            AudioRecorder.initialize();
+        }
+        
+        if (AudioVisualizer && AudioVisualizer.initialize) {
+            AudioVisualizer.initialize();
+        }
         
         // Setup event listeners
         setupEventListeners();
         
         console.log('Application initialized successfully');
     } catch (error) {
-        ErrorHandler.handleError(error, {
-            context: 'app:initialization',
-            severity: ErrorHandler.ErrorSeverity.CRITICAL
-        });
+        console.error('Error during initialization:', error);
+        if (ErrorHandler && ErrorHandler.handleError) {
+            ErrorHandler.handleError(error, {
+                context: 'app:initialization',
+                severity: ErrorHandler.ErrorSeverity ? ErrorHandler.ErrorSeverity.CRITICAL : 'critical'
+            });
+        }
     }
 }
+
+// Rest of the app.js code...
 
 /**
  * Set up all event listeners for the application
