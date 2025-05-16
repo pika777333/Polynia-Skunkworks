@@ -322,4 +322,14 @@
 </script>
 </body>
 </html>
-
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  // Defensive check: is Router loaded?
+  if (window.Router && typeof window.Router.initialize === "function") {
+    window.Router.initialize();
+    console.log("Router initialized!");
+  } else {
+    console.error("Router not found on window. Check js/router.js and script order.");
+  }
+});
+</script>
