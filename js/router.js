@@ -187,11 +187,3 @@ window.Router = {
     registerViewCallback,
     getCurrentView
 };
-
-// Export for module compatibility
-export {
-    initialize,
-    navigateTo,
-    registerViewCallback,
-    getCurrentView
-};
