@@ -937,7 +937,10 @@ function highlightKeywords(text) {
         'budget', 'concerned', 'reliability', 'safety', 'features', 
         'test drive', 'price', 'cost', 'warranty', 'financing', 
         'payments', 'hybrid', 'fuel', 'efficiency', 'implementation',
-        'support', 'training', 'integration', 'security', 'compliance'
+        'support', 'training', 'integration', 'security', 'compliance',
+        'timeline', 'deadline', 'upgrade', 'maintenance', 'discount',
+        'competitor', 'alternative', 'roi', 'return on investment',
+        'scalability', 'performance', 'speed', 'quality'
     ];
     
     // Create a regular expression to match all keywords (case insensitive)
