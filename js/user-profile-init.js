@@ -73,6 +73,26 @@
       } finally {
         setIsLoading(false);
       }
+      
+      // Subscribe to profile updates from other components
+      const handleProfileUpdate = () => {
+        try {
+          const savedData = localStorage.getItem('earwormProfileData');
+          if (savedData) {
+            setProfileData(JSON.parse(savedData));
+          }
+        } catch (error) {
+          console.error('Error loading updated profile data:', error);
+        }
+      };
+      
+      // Listen for profile updates
+      document.addEventListener('profileUpdated', handleProfileUpdate);
+      
+      // Cleanup
+      return () => {
+        document.removeEventListener('profileUpdated', handleProfileUpdate);
+      };
     }, []);
     
     // Save data to localStorage when profile is updated
@@ -80,6 +100,13 @@
       try {
         localStorage.setItem('earwormProfileData', JSON.stringify(profileData));
         setIsEditing(false);
+        
+        // Update sidebar profile if ProfileSync is available
+        if (window.ProfileSync && typeof window.ProfileSync.updateSidebarProfile === 'function') {
+          window.ProfileSync.updateSidebarProfile();
+        }
+        
+        // Display success message
         if (window.UI && window.UI.showToast) {
           window.UI.showToast('Profile saved successfully!');
         }
