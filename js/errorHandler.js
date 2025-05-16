@@ -1,4 +1,4 @@
-// errorHandler.js
+// errorHandler.js - FIXED VERSION
 // Error severity levels
 const ErrorSeverity = {
     INFO: 'info',
@@ -48,12 +48,12 @@ function handleError(error, options = {}) {
     };
 }
 
-// Expose to window for non-module scripts
+// Expose to window for non-module scripts - REPLACE THE EXPORT STATEMENT
 window.ErrorHandler = { 
     handleError, 
     ErrorSeverity,
     ErrorCategory
 };
 
-// Export for ES modules
-export { handleError, ErrorSeverity, ErrorCategory };
+// Remove the export statement that was causing the error
+// export { handleError, ErrorSeverity, ErrorCategory };
