@@ -56,4 +56,3 @@ window.ErrorHandler = {
 };
 
 // Remove the export statement that was causing the error
-// export { handleError, ErrorSeverity, ErrorCategory };
