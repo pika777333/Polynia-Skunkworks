@@ -93,12 +93,8 @@ async function navigateTo(view, skipHistory = false) {
             throw new Error(`View element #${view}View not found`);
         }
         
+        // Show the view BEFORE running callback to prevent blank screen
         viewElement.classList.remove('hidden');
-        
-        // Run view callback if registered
-        if (viewCallbacks.has(view)) {
-            await viewCallbacks.get(view)();
-        }
         
         // Update browser history (unless skipped)
         if (!skipHistory) {
@@ -107,6 +103,16 @@ async function navigateTo(view, skipHistory = false) {
         
         // Update state
         currentView = view;
+        
+        // MOVED THIS: Run view callback after view is visible
+        if (viewCallbacks.has(view)) {
+            try {
+                await viewCallbacks.get(view)();
+            } catch (error) {
+                console.error(`Error in view callback for ${view}:`, error);
+                // Continue even if callback fails
+            }
+        }
         
         console.log(`Navigation to ${view} completed`);
         return true;
