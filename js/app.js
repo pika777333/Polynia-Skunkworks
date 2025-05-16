@@ -20,6 +20,7 @@ function initializeApp() {
         if (window.ChartManager) window.ChartManager.initialize();
         if (window.AudioRecorder) window.AudioRecorder.initialize();
         if (window.AudioVisualizer) window.AudioVisualizer.initialize();
+        if (window.ProfileSync) window.ProfileSync.initialize();
         
         // Router should be initialized last after registering callbacks
         setupEventListeners();
