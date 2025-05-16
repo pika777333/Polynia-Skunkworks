@@ -565,3 +565,5 @@ const UI = (function() {
         animateWaveform
     };
 })();
+// Add this at the end of js/ui.js
+window.UI = UI;
