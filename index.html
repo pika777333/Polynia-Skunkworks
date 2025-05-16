@@ -123,8 +123,8 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">Sarah Johnson</p>
-                            <p class="text-xs text-gray-500">Sales Manager</p>
+                            <p class="text-sm font-medium text-gray-900 sidebar-profile-name">Sarah Johnson</p>
+                            <p class="text-xs text-gray-500 sidebar-profile-title">Sales Manager</p>
                         </div>
                     </div>
                 </div>
@@ -305,6 +305,7 @@
     <script src="js/visualizer.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/metrics.js"></script>
+    <script src="js/profile-sync.js"></script>
     <script src="js/router.js"></script>
     <script src="js/profile.js"></script>
     <script src="js/user-profile-init.js"></script>
@@ -312,23 +313,5 @@
 
     <!-- App initialization must come last -->
     <script src="js/app.js"></script>
-<script>
-  window.addEventListener('DOMContentLoaded', function() {
-    if (window.Router && window.Router.initialize) {
-      window.Router.initialize();
-    }
-  });
-</script>
 </body>
 </html>
-<script>
-window.addEventListener('DOMContentLoaded', function() {
-  // Defensive check: is Router loaded?
-  if (window.Router && typeof window.Router.initialize === "function") {
-    window.Router.initialize();
-    console.log("Router initialized!");
-  } else {
-    console.error("Router not found on window. Check js/router.js and script order.");
-  }
-});
-</script>
