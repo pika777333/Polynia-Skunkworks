@@ -1,4 +1,49 @@
-/**
+    // Handle profile picture upload
+    const handleProfilePictureUpload = (e) => {
+      const file = e.target.files[0];
+      setUploadError('');
+      
+      if (!file) return;
+      
+      // Check file size (limit to 1MB)
+      if (file.size > 1024 * 1024) {
+        setUploadError('Image file size must be less than 1MB');
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.match('image.*')) {
+        setUploadError('Only image files are allowed');
+        return;
+      }
+      
+      // Use ProfileSync utility if available, otherwise use built-in reader
+      if (window.ProfileSync && typeof window.ProfileSync.readImageAsBase64 === 'function') {
+        window.ProfileSync.readImageAsBase64(file)
+          .then(base64String => {
+            setProfileData({
+              ...profileData,
+              profilePicture: base64String
+            });
+          })
+          .catch(error => {
+            setUploadError(error.message || 'Error uploading image');
+          });
+      } else {
+        // Fallback to built-in reader
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setProfileData({
+            ...profileData,
+            profilePicture: event.target.result
+          });
+        };
+        reader.onerror = () => {
+          setUploadError('Error reading file');
+        };
+        reader.readAsDataURL(file);
+      }
+    };/**
  * user-profile-init.js - Improved Profile React component initialization
  */
 
@@ -53,13 +98,18 @@
       
       // Selling style
       approachStyle: 'Consultative',
-      goalPerCall: 'Needs assessment and solution presentation'
+      goalPerCall: 'Needs assessment and solution presentation',
+      
+      // Profile picture
+      profilePicture: null
     });
     
     const [isEditing, setIsEditing] = useState(false);
     const [newItem, setNewItem] = useState('');
     const [activeField, setActiveField] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [uploadError, setUploadError] = useState('');
+    const fileInputRef = React.useRef(null);
     
     // Load data from localStorage on component mount
     useEffect(() => {
@@ -225,11 +275,66 @@
           // Profile header
           React.createElement('div', { className: 'p-6 border-b border-gray-100' },
             React.createElement('div', { className: 'flex items-center' },
-              React.createElement('div', { className: 'w-16 h-16 bg-gray-200 rounded-full mr-4 flex items-center justify-center' },
-                React.createElement('svg', { className: 'w-10 h-10 text-gray-500', fill: 'currentColor', viewBox: '0 0 24 24' },
-                  React.createElement('path', { d: 'M12 12a5 5 0 100-10 5 5 0 000 10zm0 2a8 8 0 00-8 8 1 1 0 001 1h14a1 1 0 001-1 8 8 0 00-8-8z' })
-                )
+              // Profile image with upload capability
+              React.createElement('div', { className: 'relative' },
+                React.createElement('div', { 
+                  className: 'w-24 h-24 bg-gray-200 rounded-full mr-6 overflow-hidden flex items-center justify-center cursor-pointer',
+                  onClick: () => isEditing && fileInputRef.current?.click()
+                },
+                  profileData.profilePicture ? 
+                    React.createElement('img', { 
+                      src: profileData.profilePicture, 
+                      alt: 'Profile', 
+                      className: 'w-full h-full object-cover' 
+                    }) :
+                    React.createElement('svg', { 
+                      className: 'w-16 h-16 text-gray-500', 
+                      fill: 'currentColor', 
+                      viewBox: '0 0 24 24' 
+                    },
+                      React.createElement('path', { 
+                        d: 'M12 12a5 5 0 100-10 5 5 0 000 10zm0 2a8 8 0 00-8 8 1 1 0 001 1h14a1 1 0 001-1 8 8 0 00-8-8z' 
+                      })
+                    ),
+                  // Add a camera icon for editing mode
+                  isEditing && React.createElement('div', {
+                    className: 'absolute bottom-0 right-0 bg-gray-800 bg-opacity-75 rounded-full p-2 border-2 border-white'
+                  },
+                    React.createElement('svg', {
+                      className: 'w-4 h-4 text-white',
+                      fill: 'none',
+                      stroke: 'currentColor',
+                      viewBox: '0 0 24 24'
+                    },
+                      React.createElement('path', {
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        strokeWidth: '2',
+                        d: 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z'
+                      }),
+                      React.createElement('path', {
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        strokeWidth: '2',
+                        d: 'M15 13a3 3 0 11-6 0 3 3 0 016 0z'
+                      })
+                    )
+                  )
+                ),
+                // Hidden file input
+                React.createElement('input', {
+                  ref: fileInputRef,
+                  type: 'file',
+                  className: 'hidden',
+                  accept: 'image/*',
+                  onChange: handleProfilePictureUpload
+                }),
+                // Display upload error if any
+                uploadError && React.createElement('div', {
+                  className: 'absolute -bottom-6 left-0 right-0 text-xs text-red-500 text-center'
+                }, uploadError)
               ),
+              
               React.createElement('div', null,
                 isEditing ? 
                   React.createElement('input', {
