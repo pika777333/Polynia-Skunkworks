@@ -5,7 +5,7 @@
 // Configure your custom logo here
 const CUSTOM_LOGO = {
   // Set to true to use a custom logo
-  enabled: false,
+  enabled: true,
   
   // The URL of your logo image - replace with your own image URL
   imageUrl: 'https://media-hosting.imagekit.io/007a5df3a2b64ee0/unnamed.png?Expires=1841971568&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=Mz-9ZMlP6-PaAUxSKPOK764sXdcsIdL-~C7B9Zg86E4oZyc7i~qzTl2xGRPqoRG-ZP2v9hTjz7daN9JmzayhR0hHZ-fuql5VhZcKjI93St-ltAQXcm4bJesysZl5fp-p1MM3Gxar2mnM0h5wkwZv6UbTaGFZC7O~l7SvLCks2na5FLo7nye2u7HT043K1NQ-qMKmI8i0~EKcFdS3GandDIpICQNyUwSnVKp~bEeRE87kdwwDEQ7qhKAQcspUWfrsJNPSOVZ0vJW3plVu5ehdcnFO~dqoumU2HOvNlnpocPTxPInlf8e3tM646QD5qdGuxYG4jyoW0hJCtW5OK9xA~Q__',
