@@ -9,12 +9,14 @@ const ProfileSync = (function() {
         name: 'Sarah Johnson',
         title: 'Sales Manager',
         email: 'sarah.johnson@earworm.com',
-        phone: '(555) 123-4567'
+        phone: '(555) 123-4567',
+        profilePicture: null // Default is no profile picture
     };
     
     // DOM elements for sidebar profile
     let sidebarNameElement;
     let sidebarTitleElement;
+    let sidebarProfileImageElement;
     
     /**
      * Initialize the profile sync
@@ -25,6 +27,7 @@ const ProfileSync = (function() {
         // Cache DOM elements
         sidebarNameElement = document.querySelector('.sidebar-profile-name');
         sidebarTitleElement = document.querySelector('.sidebar-profile-title');
+        sidebarProfileImageElement = document.querySelector('.sidebar-profile-image');
         
         // Add event listener for storage changes (in case of multiple tabs)
         window.addEventListener('storage', function(e) {
@@ -66,6 +69,23 @@ const ProfileSync = (function() {
             
             if (sidebarTitleElement) {
                 sidebarTitleElement.textContent = profileData.title || defaultProfile.title;
+            }
+            
+            // Update profile picture if present
+            if (sidebarProfileImageElement) {
+                if (profileData.profilePicture) {
+                    // If we have a profile picture, replace the SVG with an image
+                    sidebarProfileImageElement.innerHTML = `
+                        <img src="${profileData.profilePicture}" alt="Profile" class="w-full h-full object-cover rounded-full" />
+                    `;
+                } else {
+                    // Restore the default avatar SVG if no profile picture
+                    sidebarProfileImageElement.innerHTML = `
+                        <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2a8 8 0 00-8 8 1 1 0 001 1h14a1 1 0 001-1 8 8 0 00-8-8z"></path>
+                        </svg>
+                    `;
+                }
             }
             
             console.log('Sidebar profile updated');
@@ -111,12 +131,51 @@ const ProfileSync = (function() {
         }
     }
     
+    /**
+     * Read and convert an image file to base64
+     * @param {File} file - The image file
+     * @returns {Promise<string>} A promise that resolves with the base64 string
+     */
+    function readImageAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            if (!file) {
+                reject(new Error('No file provided'));
+                return;
+            }
+            
+            // Check file size, limit to 1MB
+            if (file.size > 1024 * 1024) {
+                reject(new Error('File size exceeds 1MB limit'));
+                return;
+            }
+            
+            // Check file type
+            if (!file.type.match('image.*')) {
+                reject(new Error('Only image files are allowed'));
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                resolve(event.target.result);
+            };
+            
+            reader.onerror = function(error) {
+                reject(error);
+            };
+            
+            reader.readAsDataURL(file);
+        });
+    }
+    
     // Public API
     return {
         initialize,
         updateSidebarProfile,
         saveProfile,
-        getProfileData
+        getProfileData,
+        readImageAsBase64
     };
 })();
 
@@ -128,6 +187,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add class names to sidebar profile elements for easier selection
     const sidebarProfile = document.querySelector('.p-4.border-t .flex.items-center');
     if (sidebarProfile) {
+        const profileImageContainer = sidebarProfile.querySelector('.w-10.h-10.bg-gray-200.rounded-full');
+        if (profileImageContainer) {
+            profileImageContainer.classList.add('sidebar-profile-image');
+        }
+        
         const nameElement = sidebarProfile.querySelector('.text-sm.font-medium.text-gray-900');
         if (nameElement) {
             nameElement.classList.add('sidebar-profile-name');
