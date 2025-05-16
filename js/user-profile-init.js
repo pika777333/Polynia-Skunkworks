@@ -1,5 +1,5 @@
 /**
- * user-profile-init.js - Initialize the User Profile React component
+ * user-profile-init.js - Improved Profile React component initialization
  */
 
 // Register the UserProfile component globally when this script loads
@@ -7,6 +7,25 @@
   // Check if React and ReactDOM are available
   if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
     console.error('React or ReactDOM not available. User Profile component may not work correctly.');
+    // Create fallback content if React is not available
+    document.addEventListener('DOMContentLoaded', function() {
+      const userView = document.getElementById('userView');
+      if (userView) {
+        userView.innerHTML = `
+          <div class="flex-1 p-6">
+            <div class="grid grid-cols-12 gap-6">
+              <div class="col-span-12 mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Sales Profile</h2>
+                <p class="text-gray-600">Customize your profile to improve conversation analysis</p>
+              </div>
+              <div class="col-span-12 bg-white rounded-lg shadow-sm p-6">
+                <p>Profile customization requires JavaScript. Please make sure JavaScript is enabled in your browser.</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    });
     return;
   }
   
@@ -40,23 +59,36 @@
     const [isEditing, setIsEditing] = useState(false);
     const [newItem, setNewItem] = useState('');
     const [activeField, setActiveField] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
     
     // Load data from localStorage on component mount
     useEffect(() => {
-      const savedData = localStorage.getItem('earwormProfileData');
-      if (savedData) {
-        try {
+      try {
+        const savedData = localStorage.getItem('earwormProfileData');
+        if (savedData) {
           setProfileData(JSON.parse(savedData));
-        } catch (error) {
-          console.error('Error loading profile data:', error);
         }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+      } finally {
+        setIsLoading(false);
       }
     }, []);
     
     // Save data to localStorage when profile is updated
     const saveProfile = () => {
-      localStorage.setItem('earwormProfileData', JSON.stringify(profileData));
-      setIsEditing(false);
+      try {
+        localStorage.setItem('earwormProfileData', JSON.stringify(profileData));
+        setIsEditing(false);
+        if (window.UI && window.UI.showToast) {
+          window.UI.showToast('Profile saved successfully!');
+        }
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        if (window.UI && window.UI.showToast) {
+          window.UI.showToast('Error saving profile.', 'error');
+        }
+      }
     };
     
     // Add an item to an array field
@@ -137,6 +169,14 @@
           React.createElement('p', { className: 'text-sm text-gray-700' }, profileData[field])
       );
     };
+    
+    // Loading state
+    if (isLoading) {
+      return React.createElement('div', { className: 'flex-1 p-6 flex items-center justify-center' },
+        React.createElement('div', { className: 'spinner' }), 
+        React.createElement('span', { className: 'ml-3' }, 'Loading profile...')
+      );
+    }
     
     // Main component render
     return React.createElement('div', { className: 'flex-1 p-6 overflow-auto' },
@@ -282,22 +322,104 @@
     );
   };
   
-  // Add event listener to load the component when needed
-  document.addEventListener('DOMContentLoaded', function() {
-    // Find the user profile nav link
-    const userProfileLink = document.querySelector('.nav-link[data-target="user"]');
+  // Direct DOM initialization function
+  function initializeUserProfile() {
+    console.log('Initializing User Profile directly...');
+    const userView = document.getElementById('userView');
     
-    if (userProfileLink) {
-      // Preload the component when hovering over the link
-      userProfileLink.addEventListener('mouseenter', function() {
-        console.log('User Profile component would be preloaded here');
-      });
+    if (!userView) {
+      console.error('User View container not found');
+      return;
     }
     
-    // Initialize user profile when DOM is loaded
-    const userView = document.getElementById('userView');
-    if (userView && typeof window.initializeReactComponent === 'function') {
-      window.initializeReactComponent('userView', window.UserProfile);
+    try {
+      if (typeof ReactDOM.createRoot === 'function') {
+        // React 18+
+        const root = ReactDOM.createRoot(userView);
+        root.render(React.createElement(window.UserProfile));
+      } else {
+        // React 17 and earlier
+        ReactDOM.render(React.createElement(window.UserProfile), userView);
+      }
+      console.log('User Profile rendered successfully');
+    } catch (error) {
+      console.error('Failed to render UserProfile component:', error);
+      
+      // Fallback content
+      userView.innerHTML = `
+        <div class="flex-1 p-6">
+          <div class="grid grid-cols-12 gap-6">
+            <div class="col-span-12 mb-4">
+              <h2 class="text-xl font-bold text-gray-800">Sales Profile</h2>
+              <p class="text-gray-600">Customize your profile to improve conversation analysis</p>
+            </div>
+            <div class="col-span-12 bg-white rounded-lg shadow-sm p-6">
+              <p>There was a problem loading the profile editor. Please refresh the page to try again.</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+  
+  // Make initialization function available globally
+  window.initializeUserProfile = initializeUserProfile;
+  
+  // Auto-initialize on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Register profile initialization with Router if available
+    if (window.Router && typeof window.Router.registerViewCallback === 'function') {
+      window.Router.registerViewCallback('user', function() {
+        // Return a promise that resolves when the profile is initialized
+        return new Promise((resolve) => {
+          console.log('User profile view callback triggered');
+          
+          // Initialize the profile or use the existing initialization method
+          if (typeof window.initializeReactComponent === 'function') {
+            window.initializeReactComponent('userView', window.UserProfile);
+          } else {
+            initializeUserProfile();
+          }
+          
+          // Resolve after a short delay to ensure the component has time to render
+          setTimeout(resolve, 100);
+        });
+      });
+    } else {
+      console.log('Router not available, will initialize profile directly');
+      
+      // Get the user profile link
+      const userProfileLink = document.querySelector('.nav-link[data-target="user"]');
+      
+      if (userProfileLink) {
+        // Add click handler as a backup
+        userProfileLink.addEventListener('click', function() {
+          const userView = document.getElementById('userView');
+          if (userView) {
+            // Show the view first
+            userView.classList.remove('hidden');
+            
+            // Then initialize the component
+            if (typeof window.initializeReactComponent === 'function') {
+              window.initializeReactComponent('userView', window.UserProfile);
+            } else {
+              initializeUserProfile();
+            }
+          }
+        });
+      }
+    }
+    
+    // Pre-initialize if we're already on the user view
+    if (window.location.hash === '#user') {
+      const userView = document.getElementById('userView');
+      if (userView && !userView.classList.contains('hidden')) {
+        if (typeof window.initializeReactComponent === 'function') {
+          window.initializeReactComponent('userView', window.UserProfile);
+        } else {
+          initializeUserProfile();
+        }
+      }
     }
   });
   
