@@ -475,13 +475,7 @@ function resetCharts() {
 }
 
 // Expose functions globally
-window.ChartManager = {
-    initialize,
-    resetCharts,
-    updateSentimentChart,
-    updateTopicChart,
-    updatePainPointsChart
-};
+
 
 // Initialize charts on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -494,3 +488,10 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error during chart initialization:', error);
     }
 });
+window.ChartManager = {
+    initialize,
+    resetCharts,
+    updateSentimentChart,
+    updateTopicChart,
+    updatePainPointsChart
+};
