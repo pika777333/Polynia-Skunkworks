@@ -1,50 +1,5 @@
-    // Handle profile picture upload
-    const handleProfilePictureUpload = (e) => {
-      const file = e.target.files[0];
-      setUploadError('');
-      
-      if (!file) return;
-      
-      // Check file size (limit to 1MB)
-      if (file.size > 1024 * 1024) {
-        setUploadError('Image file size must be less than 1MB');
-        return;
-      }
-      
-      // Check file type
-      if (!file.type.match('image.*')) {
-        setUploadError('Only image files are allowed');
-        return;
-      }
-      
-      // Use ProfileSync utility if available, otherwise use built-in reader
-      if (window.ProfileSync && typeof window.ProfileSync.readImageAsBase64 === 'function') {
-        window.ProfileSync.readImageAsBase64(file)
-          .then(base64String => {
-            setProfileData({
-              ...profileData,
-              profilePicture: base64String
-            });
-          })
-          .catch(error => {
-            setUploadError(error.message || 'Error uploading image');
-          });
-      } else {
-        // Fallback to built-in reader
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setProfileData({
-            ...profileData,
-            profilePicture: event.target.result
-          });
-        };
-        reader.onerror = () => {
-          setUploadError('Error reading file');
-        };
-        reader.readAsDataURL(file);
-      }
-    };/**
- * user-profile-init.js - Improved Profile React component initialization
+/**
+ * user-profile-init.js - Initialize the User Profile React component with profile picture upload
  */
 
 // Register the UserProfile component globally when this script loads
@@ -76,9 +31,9 @@
   
   // Define the enhanced UserProfile component with comprehensive profile editing
   window.UserProfile = function() {
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
     
-    // Initial state with default values
+    // Initialize state variables at once
     const [profileData, setProfileData] = useState({
       // Basic info
       name: 'Sarah Johnson',
@@ -109,7 +64,7 @@
     const [activeField, setActiveField] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [uploadError, setUploadError] = useState('');
-    const fileInputRef = React.useRef(null);
+    const fileInputRef = useRef(null);
     
     // Load data from localStorage on component mount
     useEffect(() => {
@@ -193,6 +148,53 @@
         ...profileData,
         [field]: value
       });
+    };
+    
+    // Handle profile picture upload
+    const handleProfilePictureUpload = (e) => {
+      const file = e.target.files[0];
+      setUploadError(''); // Clear any previous errors
+      
+      if (!file) return;
+      
+      // Check file size (limit to 1MB)
+      if (file.size > 1024 * 1024) {
+        setUploadError('Image file size must be less than 1MB');
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.match('image.*')) {
+        setUploadError('Only image files are allowed');
+        return;
+      }
+      
+      // Use ProfileSync utility if available, otherwise use built-in reader
+      if (window.ProfileSync && typeof window.ProfileSync.readImageAsBase64 === 'function') {
+        window.ProfileSync.readImageAsBase64(file)
+          .then(base64String => {
+            setProfileData({
+              ...profileData,
+              profilePicture: base64String
+            });
+          })
+          .catch(error => {
+            setUploadError(error.message || 'Error uploading image');
+          });
+      } else {
+        // Fallback to built-in reader
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setProfileData({
+            ...profileData,
+            profilePicture: event.target.result
+          });
+        };
+        reader.onerror = () => {
+          setUploadError('Error reading file');
+        };
+        reader.readAsDataURL(file);
+      }
     };
     
     // Create array editor component (for productLines and commonPainPoints)
