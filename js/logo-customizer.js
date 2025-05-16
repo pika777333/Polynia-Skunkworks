@@ -8,7 +8,7 @@ const CUSTOM_LOGO = {
   enabled: true,
   
   // The URL of your logo image - replace with your own image URL
-  imageUrl: 'https://media-hosting.imagekit.io/007a5df3a2b64ee0/unnamed.png?Expires=1841971568&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=Mz-9ZMlP6-PaAUxSKPOK764sXdcsIdL-~C7B9Zg86E4oZyc7i~qzTl2xGRPqoRG-ZP2v9hTjz7daN9JmzayhR0hHZ-fuql5VhZcKjI93St-ltAQXcm4bJesysZl5fp-p1MM3Gxar2mnM0h5wkwZv6UbTaGFZC7O~l7SvLCks2na5FLo7nye2u7HT043K1NQ-qMKmI8i0~EKcFdS3GandDIpICQNyUwSnVKp~bEeRE87kdwwDEQ7qhKAQcspUWfrsJNPSOVZ0vJW3plVu5ehdcnFO~dqoumU2HOvNlnpocPTxPInlf8e3tM646QD5qdGuxYG4jyoW0hJCtW5OK9xA~Q__',
+  imageUrl: 'https://mail.google.com/mail/u/0?ui=2&ik=106f86c14a&attid=0.1&permmsgid=msg-f:1832109630333524986&th=196cf600799a1bfa&view=fimg&fur=ip&permmsgid=msg-f:1832109630333524986&sz=s0-l75-ft&attbid=ANGjdJ_4OPCL8ODu2zjf-ZnYO3BrAaOsAkblKJNfzMZSNYDgkuoIdCt-6ngu0FosNZkohEyr6rQhNDNYvp99JithoWmjWg1DZ5ge16044EGtaYv9JthO4lueXgQf3BQ&disp=emb&realattid=ii_mao34p2e0&zw',
   
   // Optional alt text for the logo
   altText: 'Custom Company Logo',
