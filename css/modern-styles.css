@@ -1,4 +1,4 @@
-/* modern-styles.css - Enhanced visual styling for Earworm */
+/* modern-styles.css - Enhanced visual styling for Earworm (Fixed Readability) */
 
 /* Modern Color Variables */
 :root {
@@ -11,28 +11,28 @@
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #3b82f6;
-  
+
   /* Gradients */
   --primary-gradient: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
   --secondary-gradient: linear-gradient(135deg, #6f42c1 0%, #20c997 100%);
   --accent-gradient: linear-gradient(135deg, #20c997 0%, #3b82f6 100%);
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  
+
   /* Blur effects */
   --blur-sm: 4px;
   --blur-md: 8px;
   --blur-lg: 16px;
-  
+
   /* Transitions */
   --transition-fast: 150ms;
   --transition-normal: 300ms;
   --transition-slow: 500ms;
-  
+
   /* Easing */
   --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
@@ -57,6 +57,7 @@ body {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  color: var(--dark);
 }
 
 .earworm-card:hover {
@@ -75,7 +76,8 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  color: transparent;
+  color: var(--primary); /* fallback */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* readability boost */
 }
 
 /* Glass morphism */
@@ -85,6 +87,7 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  color: var(--dark);
 }
 
 /* Enhanced Button Styling */
@@ -94,6 +97,7 @@ button, .btn {
   transition: all var(--transition-normal) var(--ease-bounce);
   position: relative;
   overflow: hidden;
+  color: white;
 }
 
 button:active, .btn:active {
@@ -105,6 +109,7 @@ button:active, .btn:active {
   border: none;
   color: white;
   box-shadow: 0 4px 10px rgba(232, 62, 140, 0.3);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .btn-primary:hover, .earworm-gradient:hover {
@@ -158,6 +163,7 @@ input, select, textarea {
   padding: 0.75rem 1rem;
   transition: all var(--transition-fast) ease;
   background: rgba(255, 255, 255, 0.9);
+  color: var(--dark);
 }
 
 input:focus, select:focus, textarea:focus {
@@ -166,34 +172,31 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 
-/* Enhanced Scrollbar */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background: rgba(232, 62, 140, 0.3);
   border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(232, 62, 140, 0.5);
 }
 
-/* Modern table styling */
+/* Tables */
 table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
   border-radius: 0.5rem;
   overflow: hidden;
+  color: var(--dark);
 }
-
 table th {
   background: linear-gradient(to right, rgba(232, 62, 140, 0.05), rgba(111, 66, 193, 0.05));
   font-weight: 600;
@@ -201,28 +204,25 @@ table th {
   font-size: 0.75rem;
   letter-spacing: 0.05em;
 }
-
 table th, table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid rgba(229, 231, 235, 0.5);
 }
-
 table tr:last-child td {
   border-bottom: none;
 }
 
-/* Enhanced navigation styling */
+/* Navigation */
 .nav-link {
   border-radius: 0.75rem !important;
   transition: all var(--transition-normal) var(--ease-smooth);
   position: relative;
   overflow: hidden;
 }
-
 .nav-link.active {
   background: var(--primary-gradient) !important;
+  color: white;
 }
-
 .nav-link::before {
   content: '';
   position: absolute;
@@ -235,12 +235,11 @@ table tr:last-child td {
   transition: opacity var(--transition-normal) var(--ease-smooth);
   z-index: -1;
 }
-
 .nav-link:not(.active):hover::before {
   opacity: 0.1;
 }
 
-/* Audio visualization enhancements */
+/* Audio visualization */
 .waveform {
   display: flex;
   align-items: center;
@@ -248,7 +247,6 @@ table tr:last-child td {
   gap: 3px;
   overflow: hidden;
 }
-
 .waveform-bar {
   width: 3px;
   background: linear-gradient(to top, var(--primary) 0%, var(--secondary) 100%);
@@ -256,7 +254,7 @@ table tr:last-child td {
   transition: height 0.2s var(--ease-bounce);
 }
 
-/* Enhanced audio player */
+/* Audio player */
 .audio-player {
   border-radius: 1rem;
   overflow: hidden;
@@ -264,8 +262,8 @@ table tr:last-child td {
   -webkit-backdrop-filter: blur(12px);
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--dark);
 }
-
 .audio-player button {
   width: 40px;
   height: 40px;
@@ -279,17 +277,17 @@ table tr:last-child td {
   box-shadow: 0 4px 10px rgba(232, 62, 140, 0.3);
   transition: all 0.2s var(--ease-bounce);
 }
-
 .audio-player button:hover {
   transform: scale(1.1);
 }
 
-/* Enhanced header */
+/* Header */
 header {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   background: rgba(255, 255, 255, 0.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--dark);
 }
 
 /* Background pattern */
@@ -316,7 +314,6 @@ header {
   border-top-color: var(--primary);
   animation: spin 1s ease-in-out infinite;
 }
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -329,14 +326,13 @@ header {
   border-radius: 50%;
   animation: pulse 1.5s ease infinite;
 }
-
 @keyframes pulse {
   0% { transform: scale(0.8); opacity: 0.8; }
   50% { transform: scale(1.2); opacity: 1; }
   100% { transform: scale(0.8); opacity: 0.8; }
 }
 
-/* Notifications and toasts */
+/* Toasts */
 .toast {
   border-radius: 0.75rem;
   padding: 1rem;
@@ -349,64 +345,43 @@ header {
   align-items: center;
   transform: translateY(-20px);
   opacity: 0;
+  color: var(--dark);
   transition: transform var(--transition-normal) var(--ease-smooth), 
               opacity var(--transition-normal) var(--ease-smooth);
 }
-
 .toast.show {
   transform: translateY(0);
   opacity: 1;
 }
+.toast-success { border-left: 4px solid var(--success); }
+.toast-error { border-left: 4px solid var(--danger); }
+.toast-info { border-left: 4px solid var(--info); }
+.toast-warning { border-left: 4px solid var(--warning); }
 
-.toast-success {
-  border-left: 4px solid var(--success);
-}
-
-.toast-error {
-  border-left: 4px solid var(--danger);
-}
-
-.toast-info {
-  border-left: 4px solid var(--info);
-}
-
-.toast-warning {
-  border-left: 4px solid var(--warning);
-}
-
-/* Focus state for cards */
+/* Card focus state */
 .card-focus {
   box-shadow: 0 0 0 3px rgba(232, 62, 140, 0.3), var(--shadow-xl) !important;
 }
 
-/* Enhanced metrics and charts */
+/* Charts */
 .chart-container {
   position: relative;
   border-radius: 1rem;
   overflow: hidden;
   transition: all var(--transition-normal) var(--ease-smooth);
 }
-
 .chart-container:hover {
   transform: scale(1.02);
 }
 
-/* Responsive improvements */
+/* Responsive */
 @media (max-width: 1024px) {
-  .earworm-card {
-    margin-bottom: 1rem;
-  }
-  
-  header {
-    padding: 0.5rem 1rem;
-  }
-  
-  .btn {
-    padding: 0.5rem 1rem;
-  }
+  .earworm-card { margin-bottom: 1rem; }
+  header { padding: 0.5rem 1rem; }
+  .btn { padding: 0.5rem 1rem; }
 }
 
-/* Modern badge */
+/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -418,33 +393,28 @@ header {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .badge-primary {
   background: var(--primary-gradient);
   color: white;
 }
-
 .badge-secondary {
   background: var(--secondary-gradient);
   color: white;
 }
-
 .badge-success {
   background-color: rgba(16, 185, 129, 0.1);
   color: var(--success);
 }
-
 .badge-warning {
   background-color: rgba(245, 158, 11, 0.1);
   color: var(--warning);
 }
-
 .badge-danger {
   background-color: rgba(239, 68, 68, 0.1);
   color: var(--danger);
 }
 
-/* Floating animations for background elements */
+/* Floating background elements */
 @keyframes float {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
@@ -458,7 +428,6 @@ header {
   opacity: 0.15;
   z-index: -1;
 }
-
 .float-1 {
   width: 150px;
   height: 150px;
@@ -467,7 +436,6 @@ header {
   right: 15%;
   animation: float 15s ease-in-out infinite;
 }
-
 .float-2 {
   width: 100px;
   height: 100px;
@@ -477,7 +445,6 @@ header {
   animation: float 18s ease-in-out infinite;
   animation-delay: -2s;
 }
-
 .float-3 {
   width: 80px;
   height: 80px;
