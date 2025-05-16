@@ -121,20 +121,7 @@ function setupEventListeners() {
     }
     
     // Nav links
-    document.querySelectorAll('.nav-link').forEach(link => {
-        // Remove any existing listeners to avoid duplicates
-        const newLink = link.cloneNode(true);
-        link.parentNode.replaceChild(newLink, link);
-        
-        // Add new listener
-        newLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = this.getAttribute('data-target');
-            if (window.Router && window.Router.navigateTo) {
-                window.Router.navigateTo(target);
-            }
-        });
-    });
+    
     
     console.log("All event listeners set up successfully");
 }
