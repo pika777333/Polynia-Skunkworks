@@ -123,8 +123,7 @@ function setupEventListeners() {
     // Nav links
     
     
-    console.log("All event listeners set up successfully");
-}
+
 
 /**
  * Create an emergency API Service if the real one is missing
