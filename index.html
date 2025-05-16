@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,16 +8,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    
+    <!-- Original CSS files -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/page-transitions.css">
+    
+    <!-- Modern UI enhancements -->
+    <link rel="stylesheet" href="css/modern-styles.css">
+    
     <style>
         /* Critical styles to ensure UI elements work correctly */
         .record-dot {
             display: inline-block;
             width: 16px;
             height: 16px;
-            background-color: #e83e8c;
+            background-color: var(--primary);
             border-radius: 50%;
             margin-right: 8px;
             animation: pulse 1.5s ease infinite;
@@ -28,11 +35,12 @@
             height: 24px;
             border: 3px solid rgba(232, 62, 140, 0.2);
             border-radius: 50%;
-            border-top-color: #e83e8c;
+            border-top-color: var(--primary);
             margin-right: 10px;
             animation: spin 1s ease-in-out infinite;
         }
 
+        /* Base animations */
         @keyframes pulse {
             0% { transform: scale(0.8); opacity: 0.8; }
             50% { transform: scale(1.2); opacity: 1; }
@@ -52,21 +60,42 @@
 
         .waveform-bar {
             width: 3px;
-            background-color: rgba(232, 62, 140, 0.7);
+            background: linear-gradient(to top, var(--primary) 0%, var(--secondary) 100%);
             border-radius: 3px;
-            transition: height 0.2s ease;
+            transition: height 0.2s var(--ease-bounce);
         }
 
+        /* Modern UI elements */
         .earworm-gradient {
-            background: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
+            background: var(--primary-gradient);
         }
 
         .earworm-primary-text {
-            color: #e83e8c;
+            color: var(--primary);
+        }
+        
+        /* Modern logo animation */
+        .logo-segment {
+            transition: all 0.3s var(--ease-bounce);
+        }
+        
+        .logo-segment:hover {
+            transform: scale(1.2);
+        }
+        
+        /* Modern button styles */
+        button {
+            border-radius: 0.75rem;
+            transition: all 0.3s var(--ease-bounce);
+        }
+        
+        button:active {
+            transform: scale(0.97);
         }
     </style>
 </head>
 <body>
+    <!-- Background effects container will be added by JS -->
     <div class="flex h-screen overflow-hidden bg-gray-50">
         <!-- Sidebar -->
         <div class="w-64 h-full bg-white shadow-md transition-all duration-300 z-10">
@@ -79,12 +108,12 @@
                             <div id="custom-logo-wrapper" class="w-full h-full flex items-center justify-center">
                                 <svg id="default-logo" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
                                     <g class="logo-worm">
-                                        <path class="logo-segment" d="M30,30 C40,15 50,45 60,30" stroke-width="10" stroke="#e83e8c" fill="none" />
-                                        <path class="logo-segment" d="M60,30 C70,15 80,45 90,30" stroke-width="10" stroke="#e83e8c" fill="none" />
-                                        <path class="logo-segment" d="M90,30 C100,15 110,45 120,30" stroke-width="10" stroke="#e83e8c" fill="none" />
-                                        <circle class="logo-segment" cx="25" cy="30" r="5" fill="#e83e8c" />
+                                        <path class="logo-segment" d="M30,30 C40,15 50,45 60,30" stroke-width="10" stroke="var(--primary)" fill="none" />
+                                        <path class="logo-segment" d="M60,30 C70,15 80,45 90,30" stroke-width="10" stroke="var(--primary)" fill="none" />
+                                        <path class="logo-segment" d="M90,30 C100,15 110,45 120,30" stroke-width="10" stroke="var(--primary)" fill="none" />
+                                        <circle class="logo-segment" cx="25" cy="30" r="5" fill="var(--primary)" />
                                     </g>
-                                    <text x="30" y="55" font-family="Poppins" font-weight="700" font-size="14" fill="#333">EARWORM</text>
+                                    <text x="30" y="55" font-family="Poppins" font-weight="700" font-size="14" fill="#333" class="gradient-text">EARWORM</text>
                                 </svg>
                             </div>
                             <!-- Logo edit button will be shown when hovering -->
@@ -125,7 +154,7 @@
                 </nav>
                 
                 <!-- User profile -->
-                <div class="p-4 border-t">
+                <div class="p-4 border-t glass-panel">
                     <div class="flex items-center">
                         <div class="w-10 h-10 bg-gray-200 rounded-full overflow-hidden sidebar-profile-image">
                             <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24">
@@ -144,15 +173,15 @@
         <!-- Main content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Header -->
-            <header class="bg-white shadow-sm z-10">
+            <header class="bg-white shadow-sm z-10 glass-panel">
                 <div class="px-6 py-4">
                     <div class="flex justify-between items-center">
-                        <h1 class="text-2xl font-bold text-gray-800">Sales Conversation Analyzer</h1>
+                        <h1 class="text-2xl font-bold gradient-text">Sales Conversation Analyzer</h1>
                         <div class="flex items-center space-x-4">
                             <button 
                                 id="recordButton"
-                                    class="px-6 py-2.5 rounded-full font-medium text-white earworm-gradient shadow-lg animated-button transition-all duration-300 hover:shadow-xl flex items-center"
-                                    >
+                                class="px-6 py-2.5 rounded-full font-medium text-white earworm-gradient shadow-lg animated-button transition-all duration-300 hover:shadow-xl flex items-center btn-ripple"
+                            >
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
                                 </svg>
@@ -163,7 +192,7 @@
                             </div>
                             <button 
                                 id="processButton"
-                                class="px-6 py-2.5 rounded-full font-medium text-white bg-gray-400 shadow animated-button transition-all duration-300 hover:shadow-lg opacity-50 cursor-not-allowed flex items-center"
+                                class="px-6 py-2.5 rounded-full font-medium text-white bg-gray-400 shadow animated-button transition-all duration-300 hover:shadow-lg opacity-50 cursor-not-allowed flex items-center btn-ripple"
                                 disabled
                                 onclick="handleProcessButtonClick()"
                             >
@@ -183,7 +212,7 @@
             <!-- Dashboard View (original content) -->
             <div id="dashboardView" class="flex-1 flex flex-col">
                 <!-- Audio visualization -->
-                <div id="waveformContainer" class="px-6 py-3 bg-white shadow-sm hidden">
+                <div id="waveformContainer" class="px-6 py-3 glass-panel shadow-sm hidden">
                     <div class="waveform" id="audioWaveform">
                         <!-- Waveform bars will be generated by JS -->
                     </div>
@@ -256,7 +285,7 @@
                                     <div class="text-sm text-gray-500 mt-2">
                                         Estimated Target Budget
                                     </div>
-                                    <div class="w-full mt-6 bg-gray-200 rounded-full h-4">
+                                    <div class="w-full mt-6 bg-gray-200 rounded-full h-4 relative">
                                         <div 
                                             id="budgetProgressBar"
                                             class="earworm-gradient h-4 rounded-full" 
@@ -299,6 +328,11 @@
         </div>
     </div>
 
+    <!-- Floating elements for background -->
+    <div class="float-element float-1"></div>
+    <div class="float-element float-2"></div>
+    <div class="float-element float-3"></div>
+
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
@@ -310,6 +344,11 @@
     <script src="js/ui.js"></script>
     <script src="js/transitions.js"></script>
     <script src="js/logo-customizer.js"></script>
+
+    <!-- Modern UI enhancements -->
+    <script src="js/modernUI.js"></script>
+    <script src="js/background-effects.js"></script>
+    <script src="js/enhanced-cards.js"></script>
 
     <!-- Functional components -->
     <script src="js/recorder.js"></script>
