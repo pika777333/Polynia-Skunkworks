@@ -1,11 +1,8 @@
+
 /**
- * app.js - Simplified version
+ * app.js - PRODUCTION VERSION
  * Main application initialization and control
  */
-
-// Make sure global objects are available
-window.handleRecordButtonClick = handleRecordButtonClick;
-window.handleProcessButtonClick = handleProcessButtonClick;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -30,9 +27,20 @@ function initializeApp() {
         // Setup event listeners
         setupEventListeners();
         
+        // Register view callbacks for navigation
+        registerViewCallbacks();
+        
         console.log('Application initialized successfully');
     } catch (error) {
         console.error('Error during initialization:', error);
+        
+        // Use ErrorHandler if available
+        if (window.ErrorHandler) {
+            window.ErrorHandler.handleError(error, {
+                context: 'App Initialization',
+                severity: window.ErrorHandler.ErrorSeverity.ERROR
+            });
+        }
     }
 }
 
@@ -52,16 +60,64 @@ function setupEventListeners() {
         processButton.addEventListener('click', handleProcessButtonClick);
     }
     
-    // Navigation links
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = this.getAttribute('data-target');
-            if (window.Router) {
-                window.Router.navigateTo(target);
+    // Add window resize handler for charts
+    window.addEventListener('resize', handleWindowResize);
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+}
+
+/**
+ * Register callbacks for different views
+ */
+function registerViewCallbacks() {
+    // Check if Router is available
+    if (!window.Router || !window.Router.registerViewCallback) {
+        console.warn('Router not available for registering view callbacks');
+        return;
+    }
+    
+    // Dashboard view callback
+    window.Router.registerViewCallback('dashboard', function() {
+        console.log('Dashboard view activated');
+        
+        // Reinitialize charts if needed
+        if (window.ChartManager) {
+            setTimeout(() => {
+                window.ChartManager.initialize();
+            }, 100);
+        }
+        
+        return Promise.resolve();
+    });
+    
+    // Metrics view callback
+    window.Router.registerViewCallback('metrics', function() {
+        console.log('Metrics view activated');
+        
+        // Initialize metrics view if available
+        if (typeof window.initializeMetricsView === 'function') {
+            window.initializeMetricsView();
+        } else if (typeof MetricsView !== 'undefined' && MetricsView.initialize) {
+            MetricsView.initialize();
+        }
+        
+        return Promise.resolve();
+    });
+    
+    // User profile view callback
+    window.Router.registerViewCallback('user', function() {
+        console.log('User profile view activated');
+        
+        // Initialize React user profile if available
+        if (typeof window.initializeReactComponent === 'function') {
+            const UserProfile = window.UserProfile || (window.ProfileContext ? window.ProfileContext.Provider : null);
+            if (UserProfile) {
+                window.initializeReactComponent('userView', UserProfile);
             }
-        });
+        }
+        
+        return Promise.resolve();
     });
 }
 
@@ -73,28 +129,49 @@ function handleRecordButtonClick() {
     
     if (!window.AudioRecorder) {
         console.error('AudioRecorder not available');
+        showErrorMessage('Audio recording functionality is not available');
         return;
     }
     
     if (window.AudioRecorder.isRecording()) {
         // Stop recording
         window.AudioRecorder.stopRecording().then(() => {
+            // Stop audio visualization
+            if (window.AudioVisualizer) {
+                window.AudioVisualizer.stopVisualization();
+            }
+            
             // Update UI after recording stopped
-            if (window.UI && window.UI.updateUIAfterRecordingStopped) {
+            if (window.UI) {
                 window.UI.updateUIAfterRecordingStopped();
             }
         }).catch(error => {
             console.error('Error stopping recording:', error);
+            showErrorMessage('Error stopping recording');
         });
     } else {
         // Start recording
         window.AudioRecorder.startRecording().then(() => {
+            // Start audio visualization
+            if (window.AudioVisualizer && window.AudioRecorder.getStream()) {
+                window.AudioVisualizer.startVisualization(window.AudioRecorder.getStream());
+            }
+            
             // Update UI after recording started
-            if (window.UI && window.UI.updateUIAfterRecordingStarted) {
+            if (window.UI) {
                 window.UI.updateUIAfterRecordingStarted();
             }
         }).catch(error => {
             console.error('Error starting recording:', error);
+            
+            // Provide more helpful error message based on specific error type
+            if (error.name === 'NotAllowedError') {
+                showErrorMessage('Microphone access denied. Please allow microphone access in your browser settings.');
+            } else if (error.name === 'NotFoundError') {
+                showErrorMessage('No microphone found. Please connect a microphone and try again.');
+            } else {
+                showErrorMessage('Error starting recording: ' + error.message);
+            }
         });
     }
 }
@@ -107,38 +184,56 @@ function handleProcessButtonClick() {
     
     if (!window.ApiService) {
         console.error('ApiService not available');
+        showErrorMessage('API service is not available');
         return;
+    }
+    
+    // Reset charts before new analysis
+    if (window.ChartManager) {
+        window.ChartManager.resetCharts();
     }
     
     // Check if there's audio to process
     const audioBlob = window.AudioRecorder ? window.AudioRecorder.getAudioBlob() : null;
     
     if (!audioBlob) {
-        alert('No recording available. Please record a conversation first.');
+        showErrorMessage('No recording available. Please record a conversation first.');
         return;
     }
     
     // Update UI to show processing state
-    if (window.UI && window.UI.updateUIBeforeProcessing) {
+    if (window.UI) {
         window.UI.updateUIBeforeProcessing();
     }
     
     // Process the audio
-    window.ApiService.processAudio(audioBlob).then(data => {
-        // Update UI with analysis results
-        updateAnalysisResults(data);
-        
-        // Update UI to show completed state
-        if (window.UI && window.UI.updateUIAfterProcessing) {
-            window.UI.updateUIAfterProcessing();
-        }
-    }).catch(error => {
-        console.error('Error processing audio:', error);
-        
-        if (window.UI && window.UI.updateUIAfterProcessingError) {
-            window.UI.updateUIAfterProcessingError(error.message || 'Error processing audio');
-        }
-    });
+    window.ApiService.processAudio(audioBlob)
+        .then(data => {
+            console.log('Audio processing successful', data);
+            
+            // Update UI with analysis results
+            updateAnalysisResults(data);
+            
+            // Update UI to show completed state
+            if (window.UI) {
+                window.UI.updateUIAfterProcessing();
+            }
+            
+            // Show success message
+            if (window.UI && window.UI.showToast) {
+                window.UI.showToast('Analysis completed successfully!');
+            }
+        })
+        .catch(error => {
+            console.error('Error processing audio:', error);
+            
+            // Update UI to show error state
+            if (window.UI && window.UI.updateUIAfterProcessingError) {
+                window.UI.updateUIAfterProcessingError(error.message || 'Error processing audio');
+            } else {
+                showErrorMessage('Error processing audio: ' + (error.message || 'Unknown error'));
+            }
+        });
 }
 
 /**
@@ -146,11 +241,22 @@ function handleProcessButtonClick() {
  * @param {Object} data - The analysis data
  */
 function updateAnalysisResults(data) {
-    if (!data) return;
+    if (!data) {
+        console.error('No analysis data provided');
+        return;
+    }
     
     try {
+        console.log('Updating analysis results with data:', data);
+        
         // Update transcript
-        updateTranscript(data.transcript);
+        if (data.transcript) {
+            if (window.UI && window.UI.updateTranscript) {
+                window.UI.updateTranscript(data.transcript);
+            } else {
+                updateTranscript(data.transcript);
+            }
+        }
         
         // Update charts
         if (window.ChartManager) {
@@ -168,17 +274,41 @@ function updateAnalysisResults(data) {
         }
         
         // Update budget estimation
-        updateBudgetEstimation(data.budgetEstimation);
+        if (data.budgetEstimation) {
+            if (window.UI && window.UI.updateBudgetEstimation) {
+                window.UI.updateBudgetEstimation(data.budgetEstimation);
+            } else {
+                updateBudgetEstimation(data.budgetEstimation);
+            }
+        }
         
         // Update key insights
-        updateKeyInsights(data.keyInsights);
+        if (data.keyInsights) {
+            if (window.UI && window.UI.updateKeyInsights) {
+                window.UI.updateKeyInsights(data.keyInsights);
+            } else {
+                updateKeyInsights(data.keyInsights);
+            }
+        }
+        
+        // Animate in the results if GSAP is available
+        animateResults();
+        
     } catch (error) {
         console.error('Error updating analysis results:', error);
+        
+        // Use ErrorHandler if available
+        if (window.ErrorHandler) {
+            window.ErrorHandler.handleError(error, {
+                context: 'Analysis Results',
+                severity: window.ErrorHandler.ErrorSeverity.ERROR
+            });
+        }
     }
 }
 
 /**
- * Update the transcript display
+ * Update the transcript display when UI module is not available
  * @param {Array} transcript - The transcript data
  */
 function updateTranscript(transcript) {
@@ -206,7 +336,7 @@ function updateTranscript(transcript) {
                         : '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>'}
                     ${entry.speaker} <span class="ml-2 text-gray-400 text-xs">(${timeString})</span>
                 </div>
-                <div class="mt-1 text-gray-700">${entry.text}</div>
+                <div class="mt-1 text-gray-700">${highlightKeywords(entry.text)}</div>
                 <div class="mt-1 flex items-center">
                     <div class="text-xs mr-2">Sentiment:</div>
                     <div class="w-16 h-2 bg-gray-200 rounded-full">
@@ -222,7 +352,7 @@ function updateTranscript(transcript) {
 }
 
 /**
- * Update budget estimation display
+ * Update budget estimation display when UI module is not available
  * @param {Object} data - Budget estimation data
  */
 function updateBudgetEstimation(data) {
@@ -240,13 +370,13 @@ function updateBudgetEstimation(data) {
     if (current) current.textContent = 'Current: $' + data.current.toLocaleString();
     
     if (bar) {
-        const percentage = ((data.current - data.min) / (data.max - data.min)) * 100;
-        bar.style.width = `${percentage}%`;
+        const percentage = data.max > data.min ? ((data.current - data.min) / (data.max - data.min)) * 100 : 0;
+        bar.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
     }
 }
 
 /**
- * Update key insights
+ * Update key insights when UI module is not available
  * @param {Array} insights - Key insights array
  */
 function updateKeyInsights(insights) {
@@ -261,6 +391,93 @@ function updateKeyInsights(insights) {
     });
     
     container.innerHTML = html;
+}
+
+/**
+ * Show an error message using UI toast or alert fallback
+ * @param {string} message - Error message to display
+ */
+function showErrorMessage(message) {
+    if (window.UI && window.UI.showToast) {
+        window.UI.showToast(message, 'error');
+    } else {
+        alert(message);
+    }
+}
+
+/**
+ * Handle window resize event, updating charts if needed
+ */
+function handleWindowResize() {
+    if (window.ChartManager) {
+        // Debounce the resize handler
+        clearTimeout(window.resizeTimeout);
+        window.resizeTimeout = setTimeout(() => {
+            window.ChartManager.initialize();
+        }, 250);
+    }
+}
+
+/**
+ * Handle keyboard shortcuts
+ * @param {KeyboardEvent} event - Keyboard event
+ */
+function handleKeyboardShortcuts(event) {
+    // Only handle shortcuts if no input is focused
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    // Ctrl+R or R: Record toggle
+    if ((event.ctrlKey && event.key === 'r') || (!event.ctrlKey && !event.shiftKey && event.key === 'r')) {
+        event.preventDefault();
+        handleRecordButtonClick();
+    }
+    
+    // Ctrl+A or A: Analyze
+    if ((event.ctrlKey && event.key === 'a') || (!event.ctrlKey && !event.shiftKey && event.key === 'a')) {
+        event.preventDefault();
+        
+        // Only trigger if button is enabled
+        const processButton = document.getElementById('processButton');
+        if (processButton && !processButton.disabled) {
+            handleProcessButtonClick();
+        }
+    }
+    
+    // Number keys for navigation
+    if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+        if (event.key === '1' && window.Router) {
+            event.preventDefault();
+            window.Router.navigateTo('dashboard');
+        } else if (event.key === '2' && window.Router) {
+            event.preventDefault();
+            window.Router.navigateTo('metrics');
+        } else if (event.key === '3' && window.Router) {
+            event.preventDefault();
+            window.Router.navigateTo('user');
+        }
+    }
+}
+
+/**
+ * Animate results after analysis using GSAP
+ */
+function animateResults() {
+    if (typeof gsap === 'undefined') return;
+    
+    // Animate charts container
+    const chartContainers = document.querySelectorAll('.earworm-card');
+    gsap.fromTo(chartContainers, 
+        { opacity: 0.7, y: 20 },
+        { 
+            opacity: 1, 
+            y: 0, 
+            duration: 0.5, 
+            stagger: 0.1,
+            ease: "power2.out"
+        }
+    );
 }
 
 /**
@@ -286,3 +503,29 @@ function getSentimentLabel(sentiment) {
     if (sentiment >= -0.5) return 'Neutral-';
     return 'Negative';
 }
+
+/**
+ * Highlight keywords in text
+ * @param {string} text - The text to highlight
+ * @returns {string} The text with highlighted keywords
+ */
+function highlightKeywords(text) {
+    if (!text) return '';
+    
+    const keywords = [
+        'budget', 'concerned', 'reliability', 'safety', 'features', 
+        'test drive', 'price', 'cost', 'warranty', 'financing', 
+        'payments', 'hybrid', 'fuel', 'efficiency', 'implementation',
+        'support', 'training', 'integration', 'security', 'compliance'
+    ];
+    
+    // Create a regular expression to match all keywords (case insensitive)
+    const regex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
+    
+    // Replace keywords with highlighted version
+    return text.replace(regex, '<span class="font-bold earworm-primary-text">$1</span>');
+}
+
+// Make functions globally accessible for HTML event handlers
+window.handleRecordButtonClick = handleRecordButtonClick;
+window.handleProcessButtonClick = handleProcessButtonClick;
