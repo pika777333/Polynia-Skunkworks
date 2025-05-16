@@ -121,8 +121,25 @@ function setupEventListeners() {
     }
     
     // Nav links
-    
-    
+    const navLinks = document.querySelectorAll('.nav-link');
+    if (navLinks.length > 0) {
+        navLinks.forEach(link => {
+            // Remove any existing listeners
+            const newLink = link.cloneNode(true);
+            link.parentNode.replaceChild(newLink, link);
+            
+            // Add new listener using Router if available
+            newLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = newLink.getAttribute('data-target');
+                if (window.Router && typeof window.Router.navigateTo === 'function') {
+                    window.Router.navigateTo(target);
+                }
+            });
+        });
+        console.log('Navigation link event listeners attached');
+    }
+} // This closing brace was missing in the original code
 
 
 /**
