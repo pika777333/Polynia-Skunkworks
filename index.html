@@ -169,7 +169,17 @@
                 </div>
             </div>
         </div>
-        
+     <script>
+  // Wrap your app content in the AuthProvider
+  document.addEventListener('DOMContentLoaded', function() {
+    ReactDOM.render(
+      React.createElement(AuthProvider, null, 
+        React.createElement(App, null)
+      ),
+      document.getElementById('root')
+    );
+  });
+</script>   
         <!-- Main content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Header -->
