@@ -240,3 +240,70 @@ document.addEventListener('DOMContentLoaded', function() {
         ApiService.initialize();
     }
 });
+// Modify the processAudio function in ApiService
+function processAudio(audioBlob) {
+  return new Promise((resolve, reject) => {
+    // Get auth headers
+    const authHeader = window.AuthService.getAuthHeader();
+    
+    if (!audioBlob) {
+      reject(new Error('No recording available. Please record a conversation first.'));
+      return;
+    }
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm');
+    
+    // Use auth header in the request
+    if (USE_PRODUCTION_API) {
+      fetch('/api/conversations/analyze', {
+        method: 'POST',
+        headers: {
+          ...authHeader
+        },
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        // Save conversation to database
+        saveConversation(data)
+          .then(() => resolve(data))
+          .catch(err => {
+            console.error('Error saving conversation:', err);
+            resolve(data); // Still resolve with data even if save fails
+          });
+      })
+      .catch(error => {
+        console.error('API call failed:', error);
+        reject(error);
+      });
+    } else {
+      // Mock version (keep as is)
+    }
+  });
+}
+
+// Add a function to save conversation
+function saveConversation(data) {
+  const authHeader = window.AuthService.getAuthHeader();
+  
+  return fetch('/api/conversations', {
+    method: 'POST',
+    headers: {
+      ...authHeader,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      title: `Conversation - ${new Date().toLocaleString()}`,
+      ...data
+    })
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Failed to save conversation');
+    return response.json();
+  });
+}
