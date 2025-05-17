@@ -110,63 +110,12 @@ function registerViewCallbacks() {
     window.Router.registerViewCallback('user', function() {
         console.log('User profile view activated');
         
-        // Create a simple loading indicator while the React component initializes
-        const userView = document.getElementById('userView');
-        if (userView && userView.innerHTML.trim() === '') {
-            userView.innerHTML = `
-                <div class="flex-1 p-6 flex items-center justify-center">
-                    <div class="spinner"></div>
-                    <span class="ml-3">Loading profile...</span>
-                </div>
-            `;
+        // User profile initialization
+        if (typeof window.initializeSimpleProfile === 'function') {
+            window.initializeSimpleProfile();
         }
         
-        // Try multiple initialization methods for redundancy
-        return new Promise((resolve) => {
-            try {
-                // Try direct initialization first if available
-                if (typeof window.initializeUserProfile === 'function') {
-                    window.initializeUserProfile();
-                    resolve();
-                    return;
-                }
-                
-                // Try React component initialization next
-                if (typeof window.initializeReactComponent === 'function') {
-                    const UserProfile = window.UserProfile || 
-                                      (window.ProfileContext ? window.ProfileContext.Provider : null);
-                    
-                    if (UserProfile) {
-                        window.initializeReactComponent('userView', UserProfile);
-                        resolve();
-                        return;
-                    }
-                }
-                
-                // Fallback for simple profile content if all else fails
-                if (userView && (userView.innerHTML.trim() === '' || userView.innerHTML.includes('Loading profile'))) {
-                    console.warn('No profile component available, using fallback');
-                    userView.innerHTML = `
-                        <div class="flex-1 p-6">
-                            <div class="grid grid-cols-12 gap-6">
-                                <div class="col-span-12 mb-4">
-                                    <h2 class="text-xl font-bold text-gray-800">Sales Profile</h2>
-                                    <p class="text-gray-600">Customize your profile to improve conversation analysis</p>
-                                </div>
-                                <div class="col-span-12 bg-white rounded-lg shadow-sm p-6">
-                                    <p>Profile customization is currently unavailable. Please reload the page to try again.</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                resolve();
-            } catch (error) {
-                console.error('Error initializing user profile:', error);
-                resolve(); // Resolve anyway to prevent hanging
-            }
-        });
+        return Promise.resolve();
     });
 }
 
@@ -577,4 +526,4 @@ function highlightKeywords(text) {
 
 // Make functions globally accessible for HTML event handlers
 window.handleRecordButtonClick = handleRecordButtonClick;
-window.handleProcessButtonClick = handlePr
+window.handleProcessButtonClick = handleProcessButtonClick;
