@@ -1,5 +1,5 @@
 /**
- * app.js - PRODUCTION VERSION with improved profile initialization
+ * app.js - Simplified version without authentication
  */
 
 // Initialize on page load
@@ -574,38 +574,7 @@ function highlightKeywords(text) {
     // Replace keywords with highlighted version
     return text.replace(regex, '<span class="font-bold earworm-primary-text">$1</span>');
 }
-// Update initializeApp in app.js
-function initializeApp() {
-  console.log('Initializing Earworm application...');
-  
-  try {
-    // Check authentication first
-    const { currentUser } = useAuth();
-    
-    if (!currentUser) {
-      // Show login page
-      return;
-    }
-    
-    // Initialize app components only when authenticated
-    if (window.UI) window.UI.initialize();
-    if (window.ApiService) window.ApiService.initialize();
-    if (window.ChartManager) window.ChartManager.initialize();
-    if (window.AudioRecorder) window.AudioRecorder.initialize();
-    if (window.AudioVisualizer) window.AudioVisualizer.initialize();
-    if (window.ProfileSync) window.ProfileSync.initialize();
-    
-    setupEventListeners();
-    registerViewCallbacks();
-    
-    if (window.Router) window.Router.initialize();
-    
-    console.log('Application initialized successfully');
-  } catch (error) {
-    console.error('Error during initialization:', error);
-  }
-}
 
 // Make functions globally accessible for HTML event handlers
 window.handleRecordButtonClick = handleRecordButtonClick;
-window.handleProcessButtonClick = handleProcessButtonClick;
+window.handleProcessButtonClick = handlePr
