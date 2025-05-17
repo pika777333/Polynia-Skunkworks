@@ -1,4 +1,4 @@
-// router.js - FIXED VERSION
+// router.js - FIXED VERSION without React dependencies
 // State variables
 let currentView = 'dashboard';
 let isTransitioning = false;
@@ -112,6 +112,11 @@ async function navigateTo(view, skipHistory = false) {
                 console.error(`Error in view callback for ${view}:`, error);
                 // Continue even if callback fails
             }
+        }
+        
+        // Special case for user view - initialize the simple profile
+        if (view === 'user' && typeof window.initializeSimpleProfile === 'function') {
+            window.initializeSimpleProfile();
         }
         
         console.log(`Navigation to ${view} completed`);
